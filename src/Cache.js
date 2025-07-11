@@ -105,6 +105,18 @@ class CacheSet {
             throw new Error("Invalid block type. Must be an instance of CacheBlock.");
         }
 
+        // check if the block number is already in the set
+
+        // Cache Hit
+        const blockIndex = this.isInSet(cacheBlock.blockNumber);
+        if (blockIndex !== -1) {
+            // If the block is already in the set, update its age and return it
+            this.#blocks[blockIndex].update(cacheBlock.age);
+            debug(`Cache Hit: Updated block ${cacheBlock.blockNumber} in set ${this.#setNumber}.`);
+            return this.#blocks[blockIndex]; // Return the updated block
+        }
+
+        // Cache Miss
         if (this.#blocks.length < SET_SIZE) {
             this.#blocks.push(cacheBlock); // Add block if there's space
             debug(`Cache Miss: Inserting block ${cacheBlock.blockNumber} into set ${this.#setNumber}.`);
@@ -118,16 +130,10 @@ class CacheSet {
             // cache the block to be replaced for returning
             let replacedBlock = this.#blocks[latestBlockIndex];
 
-            if (replacedBlock.blockNumber !== cacheBlock.blockNumber) {
-                // replace block with the new one
-                this.#blocks[latestBlockIndex] = cacheBlock; // Replace the block
-                debug(`Cache Miss: Replaced block ${replacedBlock.blockNumber} with block ${cacheBlock.blockNumber} in set ${this.#setNumber}.`);
-            } else {
-                // update the age of the block to be replaced
-                this.#blocks[latestBlockIndex].update(cacheBlock.getAge());
-                debug(`Cache Hit: Updated block ${replacedBlock.blockNumber} in set ${this.#setNumber}.`);
-                return replacedBlock; // Return the replaced block
-            }
+            // replace block with the new one
+            this.#blocks[latestBlockIndex] = cacheBlock; // Replace the block
+            debug(`Cache Miss: Inserting block ${cacheBlock.blockNumber}, Replacing block ${replacedBlock.blockNumber} in set ${this.#setNumber}.`);
+            return replacedBlock; // Return the replaced block
         }
     }
 }
