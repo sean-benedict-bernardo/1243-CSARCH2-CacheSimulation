@@ -1,88 +1,115 @@
-.background {
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body.background {
   background-color: #100804;
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-rows: 1fr 1fr;
   gap: 5px;
+  height: 100vh;
+  box-sizing: border-box;
 }
 
 .storage {
   background-color: #994242;
   display: flex;
-  flex-wrap: wrap;
   flex-direction: column;
-  width: 100%;
+  padding: 5px;
   gap: 5px;
+  box-sizing: border-box;
 }
-.storage div {
-  width: 100%;
-  gap: 5px;
+.storage > div {
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
+  gap: 5px;
+  flex: 1;
+  overflow: hidden;
 }
-.storage div .paramStorage {
+.storage > div .paramStorage {
   background-color: #FF9F9F;
+  border-radius: 25px;
   display: flex;
-  flex-direction: wrap;
   flex-direction: column;
-  height: 100%;
+  flex: 1;
+  overflow: auto;
+  padding: 10px;
+  box-sizing: border-box;
+  text-align: center;
+}
+.storage > div .paramSettings {
+  background-color: #FF9F9F;
+  border-radius: 25px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: auto;
+  padding: 10px;
+  box-sizing: border-box;
+  text-align: center;
+}
+.storage > div .paramSettings div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.storage > div .paramSettings div div {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
 }
 
-#cacheTable {
-  background-color: white;
-}
-
+#cacheTable,
 #sramTable {
   background-color: white;
-}
-
-.settings {
-  background-color: #994242;
-  display: flex;
-  flex-wrap: wrap;
-  flex-direction: column;
-  gap: 5px;
   width: 100%;
+  border-collapse: collapse;
 }
-.settings div {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: row;
-  width: 100%;
-  gap: 5px;
-}
-.settings div .paramSettings {
-  display: flex;
-  flex-wrap: wrap;
-  flex-direction: column;
-  background-color: #FF9F9F;
+#cacheTable th, #cacheTable td,
+#sramTable th,
+#sramTable td {
+  border: 1px solid #ccc;
+  padding: 4px;
   text-align: center;
-  height: 100%;
-  justify-content: flex-start;
-}
-.settings div .paramSettings div {
-  display: flex;
-  flex-wrap: wrap;
-  flex-direction: column;
 }
 
 #sizeTable {
   display: grid;
-  width: 100%;
+  gap: 5px;
+  justify-content: center;
 }
 #sizeTable label {
   text-align: right;
   max-width: 300px;
+  justify-content: space-between;
+}
+#sizeTable label input {
+  flex: 1;
+  margin-left: 5px;
 }
 
-#clockTable div {
+#clockTable {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+#clockTable > div {
   display: grid;
-  justify-content: center;
-  grid-template-columns: auto auto;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 5px;
+}
+#clockTable > div button {
   width: 100%;
 }
-#clockTable div button {
+
+table {
   width: 100%;
+}
+
+textarea {
+  width: 99%;
+  flex: 1;
+  resize: none;
+  min-height: 100px;
 }/*# sourceMappingURL=global.css.map */
