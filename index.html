@@ -6,8 +6,96 @@
     <title>Cache Simulator</title>
     <script src="src/Cache.js"></script>
     <script src="src/index.js"></script>
+    <link rel="stylesheet" href="global.css"></link>
 </head>
-<body>
-    <div></div>
+<body class="background">
+
+    <div class="storage">
+        Simulation:
+        <div>
+            <div class="paramStorage" id="programStorage">
+                Program
+                <textarea title="Program" name="program" id=""></textarea>
+            </div>
+            <div class="paramStorage" id="cacheStorage">
+                Cache
+
+                    <table id="cacheTable">
+                        <tr>
+                            <th>Set</th>
+                            <th>Block</th>
+                            <th>Data</th>
+                        </tr>
+                        <tr>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>0</td>
+                        </tr>
+                    </table>
+
+            </div>
+            <div class="paramStorage" id="sramStorage">
+                SRAM
+                <table id="sramTable">
+                    <tr>
+                        <th>Address</th>
+
+                        <th>Data</th>
+                    </tr>
+                    <tr>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="settings">
+        Settings
+        <div>
+            <div class="paramSettings" id="placementSettings">
+                Cache
+                <div>
+                    Placement Policy
+                    Cache Algorithm
+                </div>
+            </div>
+            <div class="paramSettings" id="clockSettings">
+                Clock
+                <div id="clockTable">
+                    <label>Tick Speed: <input type="text" title="Tick Speed" name="tickspeed" id=""/></label>
+                    <div>
+                        <button>Stop</button>
+                        <button>Step Forward</button>
+                        <button>Statistics</button>
+                        <button>Load/Save</button>
+                    </div>
+                </div>
+            </div>
+            <div class="paramSettings" id="sizeSettings">
+                Memory Size
+                <div id="sizeTable">
+
+                    <label> 
+                        Address:
+                        <input type="text" title="Address" name="addresssize" id=""/>
+                    </label>
+                    <label>
+                        Word: 
+                        <input type="text" title="Word" name="wordsize" id=""/>
+                    </label>
+                    <label>
+                        Block: 
+                        <input type="text" title="Block" name="blocksize" id=""/>
+                    </label>
+                    <label>
+                        Set:
+                        <input type="text" title="Set" name="setsize" id=""/>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>

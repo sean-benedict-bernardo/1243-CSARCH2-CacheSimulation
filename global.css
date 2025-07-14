@@ -1,0 +1,84 @@
+.background {
+  background-color: #100804;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.storage {
+  background-color: #994242;
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: column;
+  width: 100%;
+  gap: 5px;
+}
+.storage div {
+  width: 100%;
+  gap: 5px;
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  border: solid;
+}
+.storage div .paramStorage {
+  background-color: #FF9F9F;
+  display: flex;
+  flex-direction: wrap;
+  flex-direction: column;
+}
+
+#cacheTable {
+  background-color: white;
+}
+
+#sramTable {
+  background-color: white;
+}
+
+.settings {
+  background-color: #994242;
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+}
+.settings div {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  width: 100%;
+  gap: 5px;
+}
+.settings div .paramSettings {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: column;
+  background-color: #FF9F9F;
+  text-align: center;
+}
+.settings div .paramSettings div {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: column;
+}
+
+#sizeTable {
+  display: flex;
+  flex-wrap: wrap;
+}
+#sizeTable label {
+  text-align: right;
+  max-width: 300px;
+}
+
+#clockTable div {
+  display: grid;
+  grid: auto auto;
+  border-color: #100804;
+  border: solid;
+}
+#clockTable div button {
+  max-width: 100px;
+}/*# sourceMappingURL=global.css.map */

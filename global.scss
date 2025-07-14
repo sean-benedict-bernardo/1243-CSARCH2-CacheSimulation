@@ -1,0 +1,87 @@
+.background {
+  background-color: #100804;
+  display: flex;  
+  flex-wrap: wrap;
+  gap: 5px;
+
+  
+}
+
+.storage {
+  background-color: #994242;
+  display: flex;  
+  flex-wrap: wrap;
+  flex-direction:column;
+  width: 100%;
+  gap: 5px;
+  div {
+    width: 100%;
+    gap: 5px;
+    display: flex;  
+    flex-wrap: wrap;
+    flex-direction: row;
+    border: solid;
+    .paramStorage {
+      background-color: #FF9F9F;
+      display: flex;
+      flex-direction: wrap;
+      flex-direction: column;
+    }
+  }
+}
+#cacheTable {
+  background-color: white;
+}
+#sramTable {
+  background-color: white;
+}
+.settings {
+  background-color: #994242;
+  display: flex;  
+  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+  div {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    width: 100%;
+    gap: 5px;
+    .paramSettings {
+      display: flex;
+      flex-wrap: wrap;
+      flex-direction: column;
+      background-color: #FF9F9F;
+      text-align: center;
+      div {
+        display: flex;
+        flex-wrap: wrap;
+        flex-direction: column;
+        
+      }
+      
+    }
+  }
+}
+
+#sizeTable {
+  display: flex;
+  flex-wrap: wrap;
+  label {
+    text-align: right;
+    max-width: 300px;
+  }
+}
+
+#clockTable {
+  div {
+    display: grid;
+    grid: auto auto;
+    border-color: #100804;
+    border: solid;
+    button {
+      max-width: 100px;
+    }
+  }
+}
