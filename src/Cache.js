@@ -1,9 +1,8 @@
 const CAT = 5, MAT = 10, SET_SIZE = 4, IS_DEBUG = true;
 
 function debug(message) {
-    if (IS_DEBUG) {
+    if (IS_DEBUG)
         console.log(message);
-    }
 }
 
 class CacheBlock {
@@ -83,7 +82,7 @@ class CacheSet {
 
         let earliestBlockIndex = 0, earliestBlock = this.#blocks[0].age;
         for (let i = 1; i < this.#blocks.length; i++) {
-            if (this.#blocks[i].age > earliestBlock) {
+            if (this.#blocks[i].age < earliestBlock) {
                 earliestBlock = this.#blocks[i].age;
                 earliestBlockIndex = i;
             }
@@ -95,7 +94,7 @@ class CacheSet {
      * Inserts a CacheBlock into the set.
      * 
      * @param {*} cacheBlock 
-     * @returns {CacheBlock | null} - the replaced block if the set is full, null otherwise.
+     * @returns {CacheBlock} - The inserted cache block
      * @throws {Error} if cacheBlock is not an instance of CacheBlock or if the block number does not belong to this set.
      */
     insertBlock(cacheBlock) {
@@ -103,6 +102,12 @@ class CacheSet {
         // user should not be able to reach this error
         if (!(cacheBlock instanceof CacheBlock)) {
             throw new Error("Invalid block type. Must be an instance of CacheBlock.");
+        }
+
+        let packet = {
+            setNumber: this.#setNumber,
+            blockNumber: 0,
+            memBlkNum: cacheBlock.blockNumber,
         }
 
         // check if the block number is already in the set
@@ -113,28 +118,40 @@ class CacheSet {
             // If the block is already in the set, update its age and return it
             this.#blocks[blockIndex].update(cacheBlock.age);
             debug(`Cache Hit: Updated block ${cacheBlock.blockNumber} in set ${this.#setNumber}.`);
-            return this.#blocks[blockIndex]; // Return the updated block
+            packet.blockNumber = blockIndex;
+            packet.cacheBlock = this.#blocks[blockIndex];
+            return packet
         }
 
         // Cache Miss
         if (this.#blocks.length < SET_SIZE) {
             this.#blocks.push(cacheBlock); // Add block if there's space
             debug(`Cache Miss: Inserting block ${cacheBlock.blockNumber} into set ${this.#setNumber}.`);
-            return cacheBlock;
+
+            // get index of latest block
+            const latestBlockIndex = this.#blocks.length - 1;
+            packet.blockNumber = latestBlockIndex;
+            return packet;
         } else {
             // If the set is full, replace the newest block
 
             // find the index of the block with the earliest age
-            let latestBlockIndex = this.findEarliestBlock();
+            let earliestBlockIndex = this.findEarliestBlock();
 
             // cache the block to be replaced for returning
-            let replacedBlock = this.#blocks[latestBlockIndex];
+            let replacedBlock = this.#blocks[earliestBlockIndex];
 
+
+            packet.blockNumber = earliestBlockIndex;
             // replace block with the new one
-            this.#blocks[latestBlockIndex] = cacheBlock; // Replace the block
+            this.#blocks[earliestBlockIndex] = cacheBlock; // Replace the block
             debug(`Cache Miss: Inserting block ${cacheBlock.blockNumber}, Replacing block ${replacedBlock.blockNumber} in set ${this.#setNumber}.`);
-            return replacedBlock; // Return the replaced block
+            return packet
         }
+    }
+
+    getBlocks() {
+        return this.#blocks;
     }
 }
 
@@ -188,6 +205,11 @@ class Cache {
 
     // Actual cache stuff begins
 
+    /**
+     * Calculates the set number based on the block number.
+     * @param {int} blockNumber 
+     * @returns set number
+     */
     #getSetNumber(blockNumber) {
         // calculate the set number based on the block number
         return blockNumber % this.numSets;
@@ -195,7 +217,6 @@ class Cache {
 
     /**
      * Inserts a block into the cache.
-     * 
      * @param {int} blockNumber MM Block number to be inserted into the cache.
      */
     insert(blockNumber) {
@@ -215,12 +236,34 @@ class Cache {
             this.statistics.hits++;
 
         // perform insert operation
-        const replacedBlock = set.insertBlock(cacheBlock);
+        const insertedBlock = set.insertBlock(cacheBlock);
 
         this.#age++; // Increment the global age counter
+        return insertedBlock;
     }
-
+    /**
+     * Returns the cache statistics.
+     * @returns {Object} - Statistics object containing hits and misses
+     */
     getStats() {
         return this.statistics;
+    }
+
+    /**
+     * maps the cache memory to JSON format
+     * @return {Object} - JSON object representing the cache
+     */
+    getCache() {
+        let cacheJSON = []
+        for (let i = 0; i < this.cache.length; i++) {
+            const set = this.cache[i];
+            cacheJSON.push({
+                blocks: set.getBlocks().map(block => ({
+                    blockNumber: block.blockNumber,
+                    age: block.age
+                }))
+            });
+        }
+        return cacheJSON;
     }
 }
