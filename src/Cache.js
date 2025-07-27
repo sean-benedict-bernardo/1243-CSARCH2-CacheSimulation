@@ -2,7 +2,7 @@ const CAT = 5, MAT = 10, SET_SIZE = 4, IS_DEBUG = true;
 
 function debug(message) {
     if (IS_DEBUG)
-        console.log(message);
+        document.getElementById("debug").innerHTML += `<p>${message}</p>`;
 }
 
 class CacheBlock {
@@ -180,7 +180,9 @@ class Cache {
         }
     }
 
+    
     // Constructor Auxiliary Functions
+
 
     /**
      * Verifies the following fields:
@@ -203,7 +205,9 @@ class Cache {
         }
     }
 
+
     // Actual cache stuff begins
+
 
     /**
      * Calculates the set number based on the block number.
@@ -214,6 +218,7 @@ class Cache {
         // calculate the set number based on the block number
         return blockNumber % this.numSets;
     }
+
 
     /**
      * Inserts a block into the cache.
@@ -241,6 +246,8 @@ class Cache {
         this.#age++; // Increment the global age counter
         return insertedBlock;
     }
+
+
     /**
      * Returns the cache statistics.
      * @returns {Object} - Statistics object containing hits and misses
@@ -255,8 +262,8 @@ class Cache {
      */
     getCache() {
         let cacheJSON = []
-        for (let i = 0; i < this.cache.length; i++) {
-            const set = this.cache[i];
+        for (const element of this.cache) {
+            const set = element;
             cacheJSON.push({
                 blocks: set.getBlocks().map(block => ({
                     blockNumber: block.blockNumber,
