@@ -1,58 +1,65 @@
+
 const CAT = 5, MAT = 10, SET_SIZE = 4, IS_DEBUG = true;
 
-function debug(message) {
-    if (IS_DEBUG)
-        document.getElementById("debug").innerHTML += `<p>${message}</p>`;
+export function debug(document: Document, message: string) {
+    if (!IS_DEBUG) return
+
+    const debug = document.getElementById("debug")
+        
+    if (debug != null) debug.innerHTML += `<p>${message}</p>`;
 }
 
-class CacheBlock {
-    #blockNumber = 0;
-    #age = 0;
+export class CacheBlock {
+    blockNumber = 0;
+    age = 0;
 
     /**
      * @param {int} blockNumber - MM block number 
      * @param {int} age - time when block was inserted or last accessed
      */
-    constructor(blockNumber, age) {
-        this.#blockNumber = blockNumber; // Block number
-        this.#age = age;
+    constructor(blockNumber: number, age: number) {
+        this.blockNumber = blockNumber; // Block number
+        this.age = age;
+
     }
 
     /**
      * Get the block number.
      * @returns {int} - The block number.
      */
-    get blockNumber() {
-        return this.#blockNumber;
+    get_blockNumber() {
+        return this.blockNumber;
     }
 
     /**
      * Get the age of the block.
      * @returns {int} - The age of the block, representing the time when it was inserted or last accessed.
      */
-    get age() {
-        return this.#age;
+    get_age() {
+        return this.age;
     }
 
     /**
      * Update the age of the block for cache hit.
      * @param {int} age
      */
-    update(age) {
-        this.#age = age;
+    update(age: number) {
+        this.age = age;
     }
 }
 
-class CacheSet {
-    #setNumber = 0;
-    #blocks = [];
+export class CacheSet {
+    private setNumber = 0;
+    private blocks: CacheBlock[] = [];
+    private doc: Document
 
     /**
      * @param {int} setNumber - The set number in the cache.
      */
-    constructor(setNumber) {
-        this.#setNumber = setNumber; // Set number
-        this.#blocks = []; // Initialize blocks array
+    constructor(setNumber: number, doc: Document) {
+        this.setNumber = setNumber; // Set number
+        this.blocks = []; // Initialize blocks array
+        this.doc = doc
     }
 
     /**
@@ -60,9 +67,9 @@ class CacheSet {
      * @param {int} blockNumber MM block number
      * @return {int} index of the block in the set if found, -1 if not found or set is empty.
      */
-    isInSet(blockNumber) {
-        for (let i = 0; i < this.#blocks.length; i++)
-            if (this.#blocks[i].blockNumber === blockNumber)
+    isInSet(blockNumber: number) {
+        for (let i = 0; i < this.blocks.length; i++)
+            if (this.blocks[i].blockNumber === blockNumber)
                 return i;
         return -1; // Block not found in the set
     }
@@ -76,14 +83,14 @@ class CacheSet {
 
         // find the index of the block with the earliest age
         // this should not happen, otherwise the code is wrong
-        if (this.#blocks.length === 0) {
+        if (this.blocks.length === 0) {
             return -1; // No blocks in the set
         }
 
-        let earliestBlockIndex = 0, earliestBlock = this.#blocks[0].age;
-        for (let i = 1; i < this.#blocks.length; i++) {
-            if (this.#blocks[i].age < earliestBlock) {
-                earliestBlock = this.#blocks[i].age;
+        let earliestBlockIndex = 0, earliestBlock = this.blocks[0].age;
+        for (let i = 1; i < this.blocks.length; i++) {
+            if (this.blocks[i].age < earliestBlock) {
+                earliestBlock = this.blocks[i].age;
                 earliestBlockIndex = i;
             }
         }
@@ -97,7 +104,7 @@ class CacheSet {
      * @returns {CacheBlock} - The inserted cache block
      * @throws {Error} if cacheBlock is not an instance of CacheBlock or if the block number does not belong to this set.
      */
-    insertBlock(cacheBlock) {
+    insertBlock(cacheBlock: CacheBlock) {
         // check if the cacheBlock is an instance of CacheBlock
         // user should not be able to reach this error
         if (!(cacheBlock instanceof CacheBlock)) {
@@ -105,31 +112,36 @@ class CacheSet {
         }
 
         let packet = {
-            setNumber: this.#setNumber,
+            setNumber: this.setNumber,
             blockNumber: 0,
             memBlkNum: cacheBlock.blockNumber,
+            cacheBlock: cacheBlock
         }
 
         // check if the block number is already in the set
 
         // Cache Hit
         const blockIndex = this.isInSet(cacheBlock.blockNumber);
+
         if (blockIndex !== -1) {
             // If the block is already in the set, update its age and return it
-            this.#blocks[blockIndex].update(cacheBlock.age);
-            debug(`Cache Hit: Updated block ${cacheBlock.blockNumber} in set ${this.#setNumber}.`);
+            this.blocks[blockIndex].update(cacheBlock.age);
+            debug(this.doc,`Cache Hit: Updated block ${cacheBlock.blockNumber} in set ${this.setNumber}.`);
+            
             packet.blockNumber = blockIndex;
-            packet.cacheBlock = this.#blocks[blockIndex];
+            packet.cacheBlock = this.blocks[blockIndex];
+
             return packet
         }
 
         // Cache Miss
-        if (this.#blocks.length < SET_SIZE) {
-            this.#blocks.push(cacheBlock); // Add block if there's space
-            debug(`Cache Miss: Inserting block ${cacheBlock.blockNumber} into set ${this.#setNumber}.`);
+        if (this.blocks.length < SET_SIZE) {
+            this.blocks.push(cacheBlock); // Add block if there's space
+
+            debug(this.doc, `Cache Miss: Inserting block ${cacheBlock.blockNumber} into set ${this.setNumber}.`);
 
             // get index of latest block
-            const latestBlockIndex = this.#blocks.length - 1;
+            const latestBlockIndex = this.blocks.length - 1;
             packet.blockNumber = latestBlockIndex;
             return packet;
         } else {
@@ -139,33 +151,38 @@ class CacheSet {
             let earliestBlockIndex = this.findEarliestBlock();
 
             // cache the block to be replaced for returning
-            let replacedBlock = this.#blocks[earliestBlockIndex];
+            let replacedBlock = this.blocks[earliestBlockIndex];
 
 
             packet.blockNumber = earliestBlockIndex;
             // replace block with the new one
-            this.#blocks[earliestBlockIndex] = cacheBlock; // Replace the block
-            debug(`Cache Miss: Inserting block ${cacheBlock.blockNumber}, Replacing block ${replacedBlock.blockNumber} in set ${this.#setNumber}.`);
+            this.blocks[earliestBlockIndex] = cacheBlock; // Replace the block
+            debug(this.doc, `Cache Miss: Inserting block ${cacheBlock.blockNumber}, Replacing block ${replacedBlock.blockNumber} in set ${this.setNumber}.`);
             return packet
         }
     }
 
     getBlocks() {
-        return this.#blocks;
+        return this.blocks;
     }
 }
 
-class Cache {
+export class CacheMemory {
     statistics = {
         hits: 0,
         misses: 0,
     }
 
-    #age = 0;
+    private age = 0;
+    private cache: CacheSet[] = [];
+    private wordsPerBlock = 0;
+    private numBlocks = 0;
+    private numSets = 0;
+    private document: Document;
 
-    constructor(wordsPerBlock, numBlocks) {
+    constructor(wordsPerBlock: number, numBlocks: number, document: Document) {
         // verify inputs, errors will be thrown if invalid
-        this.#verifyInputs(wordsPerBlock, numBlocks);
+        this.verifyInputs(wordsPerBlock, numBlocks);
 
         this.wordsPerBlock = wordsPerBlock;
         this.numBlocks = numBlocks;
@@ -174,9 +191,10 @@ class Cache {
         this.cache = [];
         this.numSets = Math.floor(this.numBlocks / SET_SIZE); // int
 
+        this.document = document
         // create the sets
         for (let i = 0; i < this.numSets; i++) {
-            this.cache.push(new CacheSet(i));
+            this.cache.push(new CacheSet(i, this.document));
         }
     }
 
@@ -190,7 +208,7 @@ class Cache {
      * @param {*} numBlocks - number of blocks in the cache, to be checked if it is a power of 2
      * @throws {Error} if wordsPerBlock or numBlocks fails the verification
      */
-    #verifyInputs(wordsPerBlock, numBlocks) {
+    private verifyInputs(wordsPerBlock: number, numBlocks: number) {
         // verify that  wordsPerBlock is a power of 2
         if (wordsPerBlock < 2) {
             throw new Error("Words per block must be at least 2.");
@@ -214,7 +232,7 @@ class Cache {
      * @param {int} blockNumber 
      * @returns set number
      */
-    #getSetNumber(blockNumber) {
+    private getSetNumber(blockNumber: number) {
         // calculate the set number based on the block number
         return blockNumber % this.numSets;
     }
@@ -224,12 +242,12 @@ class Cache {
      * Inserts a block into the cache.
      * @param {int} blockNumber MM Block number to be inserted into the cache.
      */
-    insert(blockNumber) {
-        const setNumber = this.#getSetNumber(blockNumber);
+    insert(blockNumber: number) {
+        const setNumber = this.getSetNumber(blockNumber);
         const set = this.cache[setNumber];
 
         // Create a new CacheBlock with the current age
-        const cacheBlock = new CacheBlock(blockNumber, this.#age);
+        const cacheBlock = new CacheBlock(blockNumber, this.age);
 
         // Check if the block is already in the set
         const blockIndex = set.isInSet(blockNumber);
@@ -243,7 +261,7 @@ class Cache {
         // perform insert operation
         const insertedBlock = set.insertBlock(cacheBlock);
 
-        this.#age++; // Increment the global age counter
+        this.age++; // Increment the global age counter
         return insertedBlock;
     }
 
