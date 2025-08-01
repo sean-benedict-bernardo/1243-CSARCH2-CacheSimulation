@@ -3,11 +3,12 @@
   import { CacheMemory } from "$lib/Cache.js";
 
   const numCacheLines = 8; // Example value, can be changed
-
+  const cacheData: { blocks: { blockNumber: number; age: number }[] }[] = $state([]);
   const inserts: number[] = [];
   let curr = 0;
   let queueNum = 0;
   const wordsPerBlock = 2
+
 
   const cache = new CacheMemory(wordsPerBlock, numCacheLines, document);
 
@@ -15,11 +16,11 @@
       inserts.push(i%16);
   }
 
-  function padZero(n, width = 2) {
+  function padZero(n: number, width = 2) {
       return n.toString().padStart(width, '0');
   }
 
-  function getBlockSetId(set, block) {
+  function getBlockSetId(set: number, block: number) {
       return `data_${padZero(set)}_${block}`
   }
 
@@ -33,19 +34,20 @@
 
       const blockCell = document.getElementById(blockId);
       if (blockCell) {
-          blockCell.textContent = newBlock.memBlkNum;
+          blockCell.textContent = newBlock.memBlkNum.toString();
       }
   }
 
-  function generateCacheTable(cacheLines) {
+  function generateCacheTable(cacheLines: number) {
       const cacheTable = document.getElementById("cacheTable");
-      cacheTable.innerHTML = ""; // Clear existing content
+      if (!cacheTable) return
 
+      cacheTable.innerHTML = ""; // Clear existing content
       const blocksPerSet = 4;
       const sets = cacheLines / blocksPerSet;
 
       // Header
-      ["Set", "Block", "MM Block"].forEach(text => {
+      ["Set", "Block", "MM Block"].forEach((text) => {
           const cell = document.createElement("div");
           cell.className = "cell header";
           cell.textContent = text;
@@ -59,7 +61,7 @@
                   const setCell = document.createElement("div");
                   setCell.className = "cell set-label";
                   setCell.rowSpan = blocksPerSet;
-                  setCell.textContent = set;
+                  setCell.textContent = set.toString();
                   setCell.style.gridRow = `span ${blocksPerSet}`;
                   cacheTable.appendChild(setCell);
               }
@@ -67,7 +69,7 @@
               // Block
               const blockCell = document.createElement("div");
               blockCell.className = "cell";
-              blockCell.textContent = block;
+              blockCell.textContent = block.toString();
               cacheTable.appendChild(blockCell);
 
               // Data
@@ -78,10 +80,29 @@
           }
       }
   }
-  document.addEventListener("DOMContentLoaded", () => {
-      generateCacheTable(numCacheLines);
+  onMount(() => {
+    generateCacheTable(numCacheLines);
   });
 </script>
 
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
+<div class="cache-table">
+  <div class="row header">
+    <div>Set</div>
+    <div>Block</div>
+    <div>MM Block</div>
+    <div>Age</div>
+  </div>
+
+  {#each cacheData as set, setIndex}
+    {#each set.blocks as block, blockIndex}
+      <div class="row">
+        {#if blockIndex === 0}
+          <div rowspan={set.blocks.length} class="set-number">{setIndex}</div>
+        {/if}
+        <div>{blockIndex}</div>
+        <div>{block.blockNumber}</div>
+        <div>{block.age}</div>
+      </div>
+    {/each}
+  {/each}
+</div>
