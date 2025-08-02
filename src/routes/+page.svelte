@@ -67,7 +67,7 @@
 	}];
 
 	sramdata = [...sramdata, {
-		block: newBlock.blockNumber,
+		block: memBlk,
 		step: step_num
 	}];
 
@@ -79,6 +79,8 @@
 
 	curr = (curr + 1) % inserts.length;
 	step_num += 1;
+
+    console.log(sramdata)
     }
 
 </script>

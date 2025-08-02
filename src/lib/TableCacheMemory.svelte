@@ -1,29 +1,29 @@
 <script lang="ts">
-  export let items: { 
+  export let items: {
     set_number: number;
-    set_block_number: number; 
+    set_block_number: number;
     main_memory_block: number;
-
     step: number;
   }[] = [];
+
   export let tableLength: number;
   export let setSize: number;
 
   function padZero(n: number, width = 2) {
     return n.toString().padStart(width, '0');
-  } 
+  }
 
   function getBlockSetId(set: number, block: number) {
-      return `data_${padZero(set)}_${block}`
+    return `data_${padZero(set)}_${block}`;
   }
 
   const makeKey = (set: number, block: number) => `${set}-${block}`;
 
-  // Lookup map: "set-block" → item
-  const itemMap = new Map(items.map(item => [makeKey(item.set_number, item.set_block_number), item]));
+  // 🔁 Make itemMap reactive
+  $: itemMap = new Map(items.map(item => [makeKey(item.set_number, item.set_block_number), item]));
 
-  // Build full fixed-size grid
-  const cacheSet = Array.from({ length: tableLength }, (_, setIdx) => {
+  // 🔁 Build full grid reactively
+  $: cacheSet = Array.from({ length: tableLength }, (_, setIdx) => {
     const rows = Array.from({ length: setSize }, (_, blockIdx) => {
       const key = makeKey(setIdx, blockIdx);
       return {
@@ -34,10 +34,8 @@
           set_number: setIdx,
           set_block_number: blockIdx,
           main_memory_block: '-',
-          data: 0,
           step: '-'
         }
-
       };
     });
     return {
@@ -46,20 +44,20 @@
     };
   });
 
-  // Get last 3 data items
-  const highlightItems = items.slice(-3);
-  const highlightMap = new Map<string, string>();
+  // 🔁 Reactive highlight map
+  $: highlightItems = items.slice(-4);
+  $: highlightMap = new Map<string, string>();
+  $: {
+    const classes = ['bg-yellow-900', 'bg-yellow-700', 'bg-yellow-600', 'bg-base-100', 'bg-base-100'];
+    highlightItems.forEach((item, idx) => {
+      const key = makeKey(item.set_number, item.set_block_number);
+      highlightMap.set(key, classes[highlightItems.length - 1 - idx]);
+    });
+  }
 
-  highlightItems.forEach((item, idx) => {
-    const key = makeKey(item.set_number, item.set_block_number);
-    const classes = ['bg-yellow-900', 'bg-yellow-700', 'bg-yellow-600'];
-    highlightMap.set(key, classes[highlightItems.length - 1 - idx]);
-  });
-  console.log(highlightMap)
-  const getHighlightClass = (key: string) => {
-      return highlightMap.get(key) ?? ''
-    };
+  const getHighlightClass = (key: string) => highlightMap.get(key) ?? '';
 </script>
+
 
 <div class="overflow-x-auto rounded-box border border-base-content/5 bg-base-100 max-h-[400px] overflow-y-scroll ">
   <table class="table border-collapse w-full bg-base-100">
