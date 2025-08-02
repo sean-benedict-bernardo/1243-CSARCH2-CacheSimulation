@@ -1,15 +1,55 @@
 # 1243 CSARCH2 Cache Memory Simulator
 
 By CSARCH2 - S12 Grp 1 consisting of 
-- ANCHETA, Liam
+- ANCHETA, Liam Michael
 - BERNARDO, Sean Benedict
 - CAMPO, Roan Cedric
 - CESAR, Jusper Angelo
 - CHAN, Enzo Rafael
 
+Video link: [to be inserted]
+
 ## Machine Project Specifications
 
+### Technologies used:
 
+The Cache Simulation System was built using the following technologies:
+
+- **Svelte** – JS framework used for its simplicity and reactive component-based structure.
+- **Tailwind CSS** – utility-first CSS framework that enabled rapid styling and responsive design.
+- **JavaScript (ES6)** – base programming language.
+- **Git** – For version control and collaborative development.
+
+### GUI:
+
+The GUI consists of six parts - the text log, the Cache Memory, the SRAM, the Project Information, the Input Parameters (including the Test Case) and the Output Toggle for step by step animation or final snapshot.
+
+On the bottom side contains three containers:
+- The **left side** contains the **basic project information**.
+- The **middle container** contains an **interface for user input**. Users can input the following fields:
+    - Words per block
+    - Blocks in CM
+    - Cache Access Time (in ns)
+    - Memory Access Time (in NS)
+    - Test Case to be followed
+        - Test Case 1: Sequential sequence: up to 2n cache block. Repeat.
+        - Test Case 2: Mid-repeat blocks: Start at block 0, repeat the sequence in the middle two times up to n-1 blocks, after which continue up to 2n. Repeat.
+        - Test Case 3: Custom 64-block sequence, also following the specifications.
+- The **right container** contains an **interface for output toggle**
+    - You can either go forwards or backwards with the Cache process
+    - Or simply get the final snapshot of the Cache Memory.
+
+On the top side contains three tables:
+- The **left table** contains an **activity** log which records the cache process step by step, along with information such as whether or not it is a hit or miss, an action, and time taken for the step.
+- The **middle table** is the **Cache Memory representation** consisting of the following:
+   - Set Number
+   - Block Number in Set
+   - Main Memory Block Number
+   - Data
+   - Age (for Replacement Algorithm - LRU)
+- The **right table** is the **SRAM representation** consisting of the following:
+   - MM block
+   - Data
 
 ## Detailed Test Case Analysis
 
@@ -71,8 +111,7 @@ To summarize:
 - Average Access Time = `(2c + m * w)` ns
 - Total Access Time = `4n * (c + m * w + c * w)` ns
 
-### Test Case 2: Start at block 0, repeat the sequence in the middle two times up to n-1 blocks, after
-which continue up to 2n
+### Test Case 2: Start at block 0, repeat the sequence in the middle two times up to n-1 blocks, after which continue up to 2n
 
 To put simply, our sequence would be `0`, `1` to `n-1`, `1` to `n-1`, `n` to `2n-1`, then repeat
 
