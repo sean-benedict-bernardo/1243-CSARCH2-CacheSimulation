@@ -259,6 +259,7 @@ class Cache {
         const insertedBlock = set.insertBlock(cacheBlock);
 
         let returnObj = {
+            ctr: this.#age + 1,
             status: (blockIndex !== -1) ? "Hit" : "Miss",
             setNumber: setNumber,
             blockNumber: insertedBlock.blockNumber,
