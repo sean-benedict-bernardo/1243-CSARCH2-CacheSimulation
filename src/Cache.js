@@ -2,7 +2,7 @@ const CAT = 5, MAT = 10, SET_SIZE = 4, IS_DEBUG = true;
 
 function debug(message) {
     if (IS_DEBUG)
-        document.getElementById("debug").innerHTML += `<p>${message}</p>`;
+        console.log(message);
 }
 
 class CacheBlock {
@@ -108,6 +108,7 @@ class CacheSet {
             setNumber: this.#setNumber,
             blockNumber: 0,
             memBlkNum: cacheBlock.blockNumber,
+            replacedBlock: null
         }
 
         // check if the block number is already in the set
@@ -120,7 +121,7 @@ class CacheSet {
             debug(`Cache Hit: Updated block ${cacheBlock.blockNumber} in set ${this.#setNumber}.`);
             packet.blockNumber = blockIndex;
             packet.cacheBlock = this.#blocks[blockIndex];
-            return packet
+            return packet;
         }
 
         // Cache Miss
@@ -141,8 +142,9 @@ class CacheSet {
             // cache the block to be replaced for returning
             let replacedBlock = this.#blocks[earliestBlockIndex];
 
-
             packet.blockNumber = earliestBlockIndex;
+            packet.replacedBlock = replacedBlock;
+
             // replace block with the new one
             this.#blocks[earliestBlockIndex] = cacheBlock; // Replace the block
             debug(`Cache Miss: Inserting block ${cacheBlock.blockNumber}, Replacing block ${replacedBlock.blockNumber} in set ${this.#setNumber}.`);
@@ -180,7 +182,7 @@ class Cache {
         }
     }
 
-    
+
     // Constructor Auxiliary Functions
 
 
@@ -191,16 +193,21 @@ class Cache {
      * @throws {Error} if wordsPerBlock or numBlocks fails the verification
      */
     #verifyInputs(wordsPerBlock, numBlocks) {
+        const isPowerOfTwo = (n) => n > 0 && (n & (n - 1)) === 0;
+
+        wordsPerBlock = Math.floor(wordsPerBlock);
+        numBlocks = Math.floor(numBlocks);
+
         // verify that  wordsPerBlock is a power of 2
         if (wordsPerBlock < 2) {
             throw new Error("Words per block must be at least 2.");
-        } else if (Math.log2(wordsPerBlock) % 1 !== 0) {
+        } else if (!isPowerOfTwo(wordsPerBlock)) {
             throw new Error("Words per block must be a power of 2.");
         }
 
         // verify that number of blocks is
         // a power of 2 and at least than 4
-        if (numBlocks < 4 || (Math.log2(numBlocks) % 1 !== 0)) {
+        if (numBlocks < 4 || !isPowerOfTwo(numBlocks)) {
             throw new Error("Number of blocks must be a power of 2.");
         }
     }
@@ -219,10 +226,18 @@ class Cache {
         return blockNumber % this.numSets;
     }
 
+    /**
+     * @param {boolean} isHit - true if the block is a hit, false if it is a miss
+     */
+    calculateTime(isHit) {
+        // TODO: calculate time based on hit or miss
+    }
+
 
     /**
      * Inserts a block into the cache.
      * @param {int} blockNumber MM Block number to be inserted into the cache.
+     * @returns {Object} - An object containing Hit or Miss, the set number, block number, replaced block if applicable.
      */
     insert(blockNumber) {
         const setNumber = this.#getSetNumber(blockNumber);
@@ -243,8 +258,16 @@ class Cache {
         // perform insert operation
         const insertedBlock = set.insertBlock(cacheBlock);
 
+        let returnObj = {
+            status: (blockIndex !== -1) ? "Hit" : "Miss",
+            setNumber: setNumber,
+            blockNumber: insertedBlock.blockNumber,
+            memBlkNum: insertedBlock.memBlkNum,
+            replacedBlock: (insertedBlock.replacedBlock) ? insertedBlock.replacedBlock.blockNumber : null,
+        }
+
         this.#age++; // Increment the global age counter
-        return insertedBlock;
+        return returnObj;
     }
 
 
