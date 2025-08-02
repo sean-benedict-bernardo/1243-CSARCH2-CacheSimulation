@@ -123,14 +123,51 @@
 		numHits = stats.hits;
 		numMisses = stats.misses;
 
-		curr = (curr + 1) % inserts.length;
-		step_num += 1;
+	        curr = (curr + 1) % inserts.length;
+	        step_num += 1;
 
-        TAT = cache.calculateTotalAccessTime();
+            TAT = cache.calculateTotalAccessTime();
         AAT = cache.calculateAverageAccessTime();
 
 		console.log(sramdata);
 	}
+    function remPrev() {
+        const memBlk = inserts[curr];
+
+        const newBlock = cache.insert(memBlk) as {
+            ctr: number;
+            status: string;
+            setNumber: number;
+            blockNumber: number;
+            memBlkNum: number;
+            replacedBlock: number | null;
+        };
+
+        // REASSIGN to trigger reactivity
+        cacheMemory = [...cacheMemory, {
+            set_number: newBlock.setNumber,
+            set_block_number: newBlock.blockNumber,
+            main_memory_block: memBlk,
+            step: step_num
+        }];
+
+        sramdata = [...sramdata, {
+            block: memBlk,
+            step: step_num
+        }];
+
+        logEntries = [...logEntries, {
+            hit: newBlock.status === "Hit",
+            action: newBlock.status === "Hit" ? `Read Block ${memBlk}` : `Load Block ${memBlk}`,
+            time: step_num
+        }];
+
+        curr = (curr - 1) % inserts.length;
+        step_num = step_num > 0 ? step_num - 1 : step_num;
+
+        console.log(sramdata)
+    }
+
 </script>
 
 <div class="h-full w-full bg-base-300">
