@@ -227,12 +227,64 @@ class Cache {
     }
 
     /**
+     * Calculates the access time based on whether it's a hit or miss.
      * @param {boolean} isHit - true if the block is a hit, false if it is a miss
+     * @returns {number} - The calculated access time in nanoseconds
      */
     calculateTime(isHit) {
-        // TODO: calculate time based on hit or miss
+        if (isHit) {
+            // Time if hit: const CAT
+            return CAT;
+        } else {
+            // Time if miss: CAT + MAT * (wordsPerBlock) + CAT * (wordsPerBlock)
+            return CAT + MAT * this.wordsPerBlock + CAT * this.wordsPerBlock;
+        }
     }
 
+    /**
+     * Calculates the miss penalty time.
+     * @returns {number} - The miss penalty time in nanoseconds
+     */
+    calculateMissPenalty() {
+        return CAT + MAT * this.wordsPerBlock + CAT;
+    }
+
+    /**
+     * Calculates the average access time based on hit and miss rates.
+     * @returns {number} - The average access time in nanoseconds
+     */
+    calculateAverageAccessTime() {
+        const totalAccesses = this.statistics.hits + this.statistics.misses;
+        
+        if (totalAccesses === 0) {
+            return 0; // No accesses yet
+        }
+        
+        const hitRate = this.statistics.hits / totalAccesses;
+        const missRate = this.statistics.misses / totalAccesses;
+        const missPenalty = this.calculateMissPenalty();
+        
+        return hitRate * CAT + missRate * missPenalty;
+    }
+
+    /**
+     * Calculates the total access time for all cache operations.
+     * @returns {number} - The total access time in nanoseconds
+     */
+    calculateTotalAccessTime() {
+        const hitTime = CAT * this.wordsPerBlock;
+        const missTime = CAT + MAT * this.wordsPerBlock + CAT * this.wordsPerBlock;
+        
+        return this.statistics.hits * hitTime + this.statistics.misses * missTime;
+    }
+
+    /**
+     * Calculates the total number of memory accesses.
+     * @returns {number} - The total number of memory accesses
+     */
+    calculateMemoryAccessCount() {
+        return this.statistics.misses * this.wordsPerBlock;
+    }
 
     /**
      * Inserts a block into the cache.
