@@ -11,10 +11,3 @@ declare global {
 }
 
 export {};
-
-declare namespace svelteHTML {
-  interface HTMLAttributes<T> {
-    // example: allow custom 'myprop' on elements
-    myprop?: string;
-  }
-}

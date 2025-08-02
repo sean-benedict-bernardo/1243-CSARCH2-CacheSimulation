@@ -1,4 +1,4 @@
-const CAT = 5, MAT = 10, SET_SIZE = 4, IS_DEBUG = true;
+const SET_SIZE = 4, IS_DEBUG = true;
 
 function debug(message) {
     if (IS_DEBUG)
@@ -164,8 +164,10 @@ export class CacheMemory {
     }
 
     #age = 0;
+    CAT = 0;
+    MAT = 0;
 
-    constructor(wordsPerBlock, numBlocks) {
+    constructor(wordsPerBlock, numBlocks, CAT = 5, MAT = 10) {
         // verify inputs, errors will be thrown if invalid
         this.#verifyInputs(wordsPerBlock, numBlocks);
 
@@ -175,6 +177,8 @@ export class CacheMemory {
         // initialize the cache
         this.cache = [];
         this.numSets = Math.floor(this.numBlocks / SET_SIZE); // int
+        this.CAT = CAT;
+        this.MAT = MAT
 
         // create the sets
         for (let i = 0; i < this.numSets; i++) {
@@ -182,10 +186,16 @@ export class CacheMemory {
         }
     }
 
+    //
+    setCAT(num=5){
+        this.CAT = num
+    }
+
+    setMAT(num=10){
+        this.MAT = num
+    }
 
     // Constructor Auxiliary Functions
-
-
     /**
      * Verifies the following fields:
      * @param {*} wordsPerBlock - number of words per block, to be checked if it's a power of 2 greater than or equal to 2
@@ -233,11 +243,11 @@ export class CacheMemory {
      */
     calculateTime(isHit) {
         if (isHit) {
-            // Time if hit: const CAT
-            return CAT;
+            // Time if hit: const this.CAT
+            return this.this.CAT;
         } else {
-            // Time if miss: CAT + MAT * (wordsPerBlock) + CAT * (wordsPerBlock)
-            return CAT + MAT * this.wordsPerBlock + CAT * this.wordsPerBlock;
+            // Time if miss: this.CAT + this.MAT * (wordsPerBlock) + this.CAT * (wordsPerBlock)
+            return this.CAT + this.MAT * this.wordsPerBlock + this.CAT * this.wordsPerBlock;
         }
     }
 
@@ -246,7 +256,7 @@ export class CacheMemory {
      * @returns {number} - The miss penalty time in nanoseconds
      */
     calculateMissPenalty() {
-        return CAT + MAT * this.wordsPerBlock + CAT;
+        return this.CAT + this.MAT * this.wordsPerBlock + this.CAT;
     }
 
     /**
@@ -264,7 +274,7 @@ export class CacheMemory {
         const missRate = this.statistics.misses / totalAccesses;
         const missPenalty = this.calculateMissPenalty();
         
-        return hitRate * CAT + missRate * missPenalty;
+        return hitRate * this.CAT + missRate * missPenalty;
     }
 
     /**
@@ -272,8 +282,8 @@ export class CacheMemory {
      * @returns {number} - The total access time in nanoseconds
      */
     calculateTotalAccessTime() {
-        const hitTime = CAT * this.wordsPerBlock;
-        const missTime = CAT + MAT * this.wordsPerBlock + CAT * this.wordsPerBlock;
+        const hitTime = this.CAT * this.wordsPerBlock;
+        const missTime = this.CAT + this.MAT * this.wordsPerBlock + this.CAT * this.wordsPerBlock;
         
         return this.statistics.hits * hitTime + this.statistics.misses * missTime;
     }

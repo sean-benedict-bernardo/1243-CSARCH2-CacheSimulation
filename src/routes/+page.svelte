@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { onMount } from "svelte";
   import { CacheMemory } from "$lib/Cache.js";
   import TableMemory from "$lib/TableCacheMemory.svelte";
-  import SRAMTable from '$lib/TableSRAM.svelte'
+  import SRAMTable from '$lib/TableSRAM.svelte';
+  import { onMount } from "svelte";
 
   const numCacheLines = 8; // Example value, can be changed
   const cacheData: { blocks: { blockNumber: number; age: number }[] }[] = $state([]);
@@ -13,7 +13,7 @@
 
   const step_num = 1
 
-  const cache = new CacheMemory(wordsPerBlock, numCacheLines);
+  const cache = new CacheMemory(wordsPerBlock, numCacheLines, 5, 10);
 
   for (let i = 0; i < 32; ++i) {
       inserts.push(i%16);
