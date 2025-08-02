@@ -2,6 +2,7 @@
     import { CacheMemory } from "$lib/Cache.js";
     import TableMemory from "$lib/TableCacheMemory.svelte";
     import SRAMTable from '$lib/TableSRAM.svelte';
+    import ActionLogs from '$lib/TableActionLogs.svelte'
     import { onMount } from "svelte";
 
     const numCacheLines = 8; // Example value, can be changed
@@ -13,7 +14,16 @@
 
     const step_num = 1
 
-    const cache = new CacheMemory(wordsPerBlock, numCacheLines, 5, 10);
+    let wordsPerBlockInput = wordsPerBlock;
+    let numCacheLinesInput = numCacheLines;
+    let catNs = 5;
+    let matNs = 10;
+
+    // For test cases
+    let customPattern = "";
+    let testCaseSelected: string | null = null;
+
+    const cache = new CacheMemory(wordsPerBlock, numCacheLines, catNs, matNs);
 
     for (let i = 0; i < 32; ++i) {
         inserts.push(i%16);
@@ -87,6 +97,7 @@
     onMount(() => {
         generateCacheTable(numCacheLines);
     });
+
     const data = [
         {data: 1, set_number:1, set_block_number: 0, main_memory_block: 1, step: 0},
         {data: 2, set_number:1, set_block_number: 2, main_memory_block: 2, step: 1},
@@ -100,14 +111,12 @@
         { data: '2', address: 3 }
     ]
 
-    let wordsPerBlockInput = wordsPerBlock;
-    let numCacheLinesInput = numCacheLines;
-    let catNs = 5;
-    let matNs = 10;
-
-    // For test cases
-    let customPattern = "";
-    let testCaseSelected: string | null = null;
+    let logEntries = [
+        { hit: true, action: "Read Block 3", time: 1 },
+        { hit: false, action: "Load Block 5", time: 2 },
+        { hit: true, action: "Read Block 3", time: 3 }
+    ];
+    
 </script>
 
 <div class="w-full h-full bg-base-300">
@@ -115,6 +124,7 @@
     <div class=" w-full ">
         
         <div class="flex flex-row justify-center gap-2">
+            <ActionLogs logs={logEntries}/>
             <TableMemory tableLength={4} setSize={4} items={data}></TableMemory>
             <SRAMTable addressBits={4} blockSize={4} items={sramdata} />
         </div>
