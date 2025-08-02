@@ -3,11 +3,19 @@
     set_number: number;
     set_block_number: number; 
     main_memory_block: number;
-    data: string|number; 
+
     step: number;
   }[] = [];
   export let tableLength: number;
   export let setSize: number;
+
+  function padZero(n: number, width = 2) {
+    return n.toString().padStart(width, '0');
+  } 
+
+  function getBlockSetId(set: number, block: number) {
+      return `data_${padZero(set)}_${block}`
+  }
 
   const makeKey = (set: number, block: number) => `${set}-${block}`;
 
@@ -15,7 +23,7 @@
   const itemMap = new Map(items.map(item => [makeKey(item.set_number, item.set_block_number), item]));
 
   // Build full fixed-size grid
-  const tableRows = Array.from({ length: tableLength }, (_, setIdx) => {
+  const cacheSet = Array.from({ length: tableLength }, (_, setIdx) => {
     const rows = Array.from({ length: setSize }, (_, blockIdx) => {
       const key = makeKey(setIdx, blockIdx);
       return {
@@ -60,22 +68,21 @@
         <th class="p-2 border border-black">Set</th>
         <th class="p-2">Block</th>
         <th class="p-2">MM block</th>
-        <th class="p-2">Data</th>
+
         <th class="p-2">Step</th>
       </tr>
     </thead>
     <tbody>
-      {#each tableRows as group, groupIdx}
-        {#each group.rows as row, rowIdx}
+      {#each cacheSet as set, setIdx}
+        {#each set.rows as row, rowIdx}
           <tr class="border border-black {getHighlightClass(row.key)}">
             {#if rowIdx === 0}
               <td class="text-center border border-black" rowspan={setSize}>
-                {group.set_number}
+                {set.set_number}
               </td>
             {/if}
             <td class="text-center border border-black">{row.set_block_number}</td>
-            <td class="text-center border border-black">{row.item?.main_memory_block ?? ''}</td>
-            <td class="text-center border border-black">{row.item?.data ?? ''}</td>
+            <td class="text-center border border-black" id={getBlockSetId(setIdx, rowIdx)}>{row.item?.main_memory_block ?? ''}</td>
             <td class="text-center border border-black">{row.item?.step ?? ''}</td>
           </tr>
         {/each}

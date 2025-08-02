@@ -1,123 +1,88 @@
 <script lang="ts">
-    import { CacheMemory } from "$lib/Cache.js";
-    import TableMemory from "$lib/TableCacheMemory.svelte";
-    import SRAMTable from '$lib/TableSRAM.svelte';
-    import ActionLogs from '$lib/TableActionLogs.svelte'
-    import { onMount } from "svelte";
+	import { CacheMemory } from "$lib/Cache.js";
+	import TableMemory from "$lib/TableCacheMemory.svelte";
+	import SRAMTable from '$lib/TableSRAM.svelte';
+	import ActionLogs from '$lib/TableActionLogs.svelte';
+	import { onMount } from "svelte";
 
-    const numCacheLines = 8; // Example value, can be changed
-    const cacheData: { blocks: { blockNumber: number; age: number }[] }[] = $state([]);
-    const inserts: number[] = [];
-    let curr = 0;
-    let queueNum = 0;
-    const wordsPerBlock = 2
+	const SRAM_BLOCKS = 16;
+	const numCacheLines = 8;
+	const wordsPerBlock = 2;
 
-    const step_num = 1
+	// Reactive Inputs
+	let wordsPerBlockInput = wordsPerBlock;
+	let numCacheLinesInput = numCacheLines;
+	let catNs = 5;
+	let matNs = 10;
 
-    let wordsPerBlockInput = wordsPerBlock;
-    let numCacheLinesInput = numCacheLines;
-    let catNs = 5;
-    let matNs = 10;
+	// Simulation states
+	let inserts: number[] = [];
+	let curr = 0;
+	let step_num = 1;
 
-    // For test cases
-    let customPattern = "";
-    let testCaseSelected: string | null = null;
+	let cacheMemory: {
+		set_number: number;
+		set_block_number: number;
+		main_memory_block: number;
+		step: number;
+	}[] = [];
 
-    const cache = new CacheMemory(wordsPerBlock, numCacheLines, catNs, matNs);
+	let sramdata: { block: number; step: number }[] = [];
 
-    for (let i = 0; i < 32; ++i) {
-        inserts.push(i%16);
+	let logEntries: { hit: boolean; action: string; time: number }[] = [];
+
+	let cache = new CacheMemory(wordsPerBlock, numCacheLines, catNs, matNs);
+
+	// Initialize inputs
+	for (let i = 0; i < SRAM_BLOCKS * 2; ++i) {
+		inserts.push(i % SRAM_BLOCKS);
+	}
+
+	function padZero(n: number, width = 2) {
+		return n.toString().padStart(width, '0');
+	}
+
+	function getBlockSetId(set: number, block: number) {
+		return `data_${padZero(set)}_${block}`;
+	}
+
+	function addNext() {
+	const memBlk = inserts[curr];
+
+	const newBlock = cache.insert(memBlk) as {
+		ctr: number;
+		status: string;
+		setNumber: number;
+		blockNumber: number;
+		memBlkNum: number;
+		replacedBlock: number | null;
+	};
+
+	// REASSIGN to trigger reactivity
+	cacheMemory = [...cacheMemory, {
+		set_number: newBlock.setNumber,
+		set_block_number: newBlock.blockNumber,
+		main_memory_block: memBlk,
+		step: step_num
+	}];
+
+	sramdata = [...sramdata, {
+		block: newBlock.blockNumber,
+		step: step_num
+	}];
+
+	logEntries = [...logEntries, {
+		hit: newBlock.status === "Hit",
+		action: newBlock.status === "Hit" ? `Read Block ${memBlk}` : `Load Block ${memBlk}`,
+		time: step_num
+	}];
+
+	curr = (curr + 1) % inserts.length;
+	step_num += 1;
     }
 
-    function padZero(n: number, width = 2) {
-        return n.toString().padStart(width, '0');
-    }
-
-    function getBlockSetId(set: number, block: number) {
-        return `data_${padZero(set)}_${block}`
-    }
-
-    function addNext() {
-        const newBlock = cache.insert(inserts[curr]);
-        curr = (curr + 1) % inserts.length;
-        
-        console.log(JSON.stringify(newBlock))
-        const blockId = getBlockSetId(newBlock.setNumber, newBlock.blockNumber);
-
-
-        const blockCell = document.getElementById(blockId);
-        if (blockCell) {
-            blockCell.textContent = newBlock.memBlkNum.toString();
-        }
-    }
-
-    function generateCacheTable(cacheLines: number) {
-        const cacheTable = document.getElementById("cacheTable");
-        if (!cacheTable) return
-
-        cacheTable.innerHTML = ""; // Clear existing content
-        const blocksPerSet = 4;
-        const sets = cacheLines / blocksPerSet;
-
-        // Header
-        ["Set", "Block", "MM Block"].forEach((text) => {
-            const cell = document.createElement("div");
-            cell.className = "cell header";
-            cell.textContent = text;
-            cacheTable.appendChild(cell);
-        });
-
-        for (let set = 0; set < sets; set++) {
-            for (let block = 0; block < blocksPerSet; block++) {
-                // Set Column (only once per set)
-                if (block === 0) {
-                    const setCell = document.createElement("div");
-                    setCell.className = "cell set-label";
-                    setCell.rowSpan = blocksPerSet;
-                    setCell.textContent = set.toString();
-                    setCell.style.gridRow = `span ${blocksPerSet}`;
-                    cacheTable.appendChild(setCell);
-                }
-
-                // Block
-                const blockCell = document.createElement("div");
-                blockCell.className = "cell";
-                blockCell.textContent = block.toString();
-                cacheTable.appendChild(blockCell);
-
-                // Data
-                const dataCell = document.createElement("div");
-                dataCell.className = "cell set-row";
-                dataCell.id = getBlockSetId(set, block);
-                cacheTable.appendChild(dataCell);
-            }
-        }
-    }
-    
-    onMount(() => {
-        generateCacheTable(numCacheLines);
-    });
-
-    const data = [
-        {data: 1, set_number:1, set_block_number: 0, main_memory_block: 1, step: 0},
-        {data: 2, set_number:1, set_block_number: 2, main_memory_block: 2, step: 1},
-        {data: 3, set_number:1, set_block_number: 1, main_memory_block: 3, step: 1},
-        {data: 4, set_number:1, set_block_number: 3, main_memory_block: 4, step: 1}
-    ]
-    const sramdata = [
-        { data: '3', address: 0 },
-        { data: '5', address: 1 },
-        { data: '7', address: 2 },
-        { data: '2', address: 3 }
-    ]
-
-    let logEntries = [
-        { hit: true, action: "Read Block 3", time: 1 },
-        { hit: false, action: "Load Block 5", time: 2 },
-        { hit: true, action: "Read Block 3", time: 3 }
-    ];
-    
 </script>
+
 
 <div class="w-full h-full bg-base-300">
     <h1 class="text-2xl font-bold text-center">Cache Simulator</h1>
@@ -125,8 +90,8 @@
         
         <div class="flex flex-row justify-center gap-2">
             <ActionLogs logs={logEntries}/>
-            <TableMemory tableLength={4} setSize={4} items={data}></TableMemory>
-            <SRAMTable addressBits={4} blockSize={4} items={sramdata} />
+            <TableMemory tableLength={4} setSize={4} items={cacheMemory}></TableMemory>
+            <SRAMTable addressBits={4} blockSize={1} items={sramdata} />
         </div>
          <div class="divider"></div>
         <div class="flex flex-row gap-2 justify-center ">
@@ -154,11 +119,11 @@
                         </fieldset>
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">CAT in ns</legend>
-                            <input type="text" class="input" placeholder="Type here" />
+                            <input type="text" class="input" placeholder="Type here" bind:value={catNs}/>
                         </fieldset>
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">MAT in ns</legend>
-                            <input type="text" class="input" placeholder="Type here" />
+                            <input type="text" class="input" placeholder="Type here" bind:value={matNs}/>
                         </fieldset>
                     </div> 
                 </div>
@@ -182,7 +147,7 @@
                 Step {step_num} of 16
                 <div class="flex flex-row">
                     <button class="btn btn-xs">Previous</button>
-                <button class="btn btn-xs">Next</button>
+                <button class="btn btn-xs" onclick={addNext} >Next</button>
                 </div>
                 <button class="btn btn-xs">Final Snapshot</button>
             </div>

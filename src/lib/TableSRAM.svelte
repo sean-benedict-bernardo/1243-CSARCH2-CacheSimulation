@@ -1,43 +1,36 @@
 <script lang="ts">
   export let addressBits: number;
   export let blockSize: number;
-  export let items: { address: number; data: string | number }[] = [];
-  export let steps: { address: number; step: number }[] = [];
+  export let items: { block: number }[] = [];
 
   const tableLength = 2 ** addressBits;
 
-  const itemMap = new Map(items.map(item => [item.address, item.data]));
-  const stepMap = new Map(steps.map(s => [s.address, s.step]));
+  // Map each block to its first insertion step (based on order of appearance)
+  const stepMap = new Map<number, number>();
+  items.forEach(({ block }, index) => {
+    if (!stepMap.has(block)) {
+      stepMap.set(block, index + 1); // step = index + 1
+    }
+  });
 
-  const getBlockNumber = (addr: number) => Math.floor(addr / blockSize);
-
-  const blockStepMap = new Map<number, number>();
-  for (const { address, step } of steps) {
-    const block = getBlockNumber(address);
-    const prev = blockStepMap.get(block) ?? -1;
-    if (step > prev) blockStepMap.set(block, step);
-  }
-
-  const last3 = items.slice(-3).map(i => i.address);
+  // Highlight the last 3 inserted blocks
+  const last3 = items.slice(-3).map(i => i.block);
   const highlightMap = new Map<number, string>();
   const highlightClasses = ['bg-yellow-900', 'bg-yellow-700', 'bg-yellow-600'];
-
-  last3.forEach((addr, i) => {
-    highlightMap.set(addr, highlightClasses[highlightClasses.length - 1 - i]);
+  last3.forEach((block, i) => {
+    highlightMap.set(block, highlightClasses[highlightClasses.length - 1 - i]);
   });
 
   type Row = {
     address: number;
     block: number;
-    data?: string | number;
     step?: string | number;
-    blockStep?: string | number;
     highlightClass: string;
     showBlockCell: boolean;
     rowspan: number;
   };
 
-  // Build grouped rows
+  // Build grouped table rows
   const tableRows: Row[] = [];
   for (let block = 0; block < tableLength / blockSize; block++) {
     const rowspan = blockSize;
@@ -46,10 +39,8 @@
       const row: Row = {
         address,
         block,
-        data: itemMap.get(address) ?? '0',
-        step: stepMap.get(address) ?? '-',
-        blockStep: blockStepMap.get(block) ?? '-',
-        highlightClass: highlightMap.get(address) ?? '',
+        step: stepMap.get(block) ?? '-',
+        highlightClass: highlightMap.get(block) ?? '',
         showBlockCell: i === 0,
         rowspan
       };
@@ -57,15 +48,13 @@
     }
   }
 </script>
+
 <div class="overflow-x-auto rounded-box border border-base-content/5 bg-base-100 max-h-[400px] overflow-y-scroll ">
   <table class="table border-collapse w-full bg-base-100">
     <thead class="sticky top-0 z-10 bg-base-200">
       <tr class="border border-black">
         <th class="p-2 border border-black">Block</th>
-        <th class="p-2 border border-black">Address</th>
-        <th class="p-2 border border-black">Data</th>
         <th class="p-2 border border-black">Step</th>
-        <th class="p-2 border border-black">Block Step</th>
       </tr>
     </thead>
     <tbody>
@@ -74,13 +63,8 @@
           {#if row.showBlockCell}
             <td class="text-center border border-black" rowspan={row.rowspan}>{row.block}</td>
           {/if}
-          <td class="text-center border border-black">{row.address}</td>
 
-          <td class="text-center border border-black">{row.data ?? ''}</td>
           <td class="text-center border border-black">{row.step ?? ''}</td>
-          {#if row.showBlockCell}
-            <td class="text-center border border-black" rowspan={row.rowspan}>{row.blockStep ?? ''}</td>
-          {/if}
         </tr>
       {/each}
     </tbody>
