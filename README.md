@@ -7,6 +7,7 @@ By CSARCH2 - S12 Grp 1 consisting of
 - CESAR, Jusper Angelo
 - CHAN, Enzo Rafael
 
+Deployed to: https://csarch2-cache-simulator.vercel.app/
 Video link: [to be inserted]
 
 ## Machine Project Specifications
