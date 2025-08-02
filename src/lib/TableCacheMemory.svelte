@@ -47,8 +47,8 @@
 </script>
 
 <div class="overflow-x-auto rounded-box border border-base-content/5 bg-base-100 max-h-[400px] overflow-y-scroll ">
-  <table class="table border-collapse">
-    <thead >
+  <table class="table border-collapse w-full bg-base-100">
+    <thead class="sticky top-0 z-10 bg-base-200">
       <tr class="border border-black ">
         <th class="p-2 border border-black">Set</th>
         <th class="p-2">Block</th>
