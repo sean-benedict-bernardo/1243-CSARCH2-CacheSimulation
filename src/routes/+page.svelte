@@ -1,98 +1,113 @@
 <script lang="ts">
-  import { CacheMemory } from "$lib/Cache.js";
-  import TableMemory from "$lib/TableCacheMemory.svelte";
-  import SRAMTable from '$lib/TableSRAM.svelte';
-  import { onMount } from "svelte";
+    import { CacheMemory } from "$lib/Cache.js";
+    import TableMemory from "$lib/TableCacheMemory.svelte";
+    import SRAMTable from '$lib/TableSRAM.svelte';
+    import { onMount } from "svelte";
 
-  const numCacheLines = 8; // Example value, can be changed
-  const cacheData: { blocks: { blockNumber: number; age: number }[] }[] = $state([]);
-  const inserts: number[] = [];
-  let curr = 0;
-  let queueNum = 0;
-  const wordsPerBlock = 2
+    const numCacheLines = 8; // Example value, can be changed
+    const cacheData: { blocks: { blockNumber: number; age: number }[] }[] = $state([]);
+    const inserts: number[] = [];
+    let curr = 0;
+    let queueNum = 0;
+    const wordsPerBlock = 2
 
-  const step_num = 1
+    const step_num = 1
 
-  const cache = new CacheMemory(wordsPerBlock, numCacheLines, 5, 10);
+    const cache = new CacheMemory(wordsPerBlock, numCacheLines, 5, 10);
 
-  for (let i = 0; i < 32; ++i) {
-      inserts.push(i%16);
-  }
+    for (let i = 0; i < 32; ++i) {
+        inserts.push(i%16);
+    }
 
-  function padZero(n: number, width = 2) {
-      return n.toString().padStart(width, '0');
-  }
+    function padZero(n: number, width = 2) {
+        return n.toString().padStart(width, '0');
+    }
 
-  function getBlockSetId(set: number, block: number) {
-      return `data_${padZero(set)}_${block}`
-  }
+    function getBlockSetId(set: number, block: number) {
+        return `data_${padZero(set)}_${block}`
+    }
 
-  function addNext() {
-      const newBlock = cache.insert(inserts[curr]);
-      curr = (curr + 1) % inserts.length;
-      
-      console.log(JSON.stringify(newBlock))
-      const blockId = getBlockSetId(newBlock.setNumber, newBlock.blockNumber);
+    function addNext() {
+        const newBlock = cache.insert(inserts[curr]);
+        curr = (curr + 1) % inserts.length;
+        
+        console.log(JSON.stringify(newBlock))
+        const blockId = getBlockSetId(newBlock.setNumber, newBlock.blockNumber);
 
 
-      const blockCell = document.getElementById(blockId);
-      if (blockCell) {
-          blockCell.textContent = newBlock.memBlkNum.toString();
-      }
-  }
+        const blockCell = document.getElementById(blockId);
+        if (blockCell) {
+            blockCell.textContent = newBlock.memBlkNum.toString();
+        }
+    }
 
-  function generateCacheTable(cacheLines: number) {
-      const cacheTable = document.getElementById("cacheTable");
-      if (!cacheTable) return
+    function generateCacheTable(cacheLines: number) {
+        const cacheTable = document.getElementById("cacheTable");
+        if (!cacheTable) return
 
-      cacheTable.innerHTML = ""; // Clear existing content
-      const blocksPerSet = 4;
-      const sets = cacheLines / blocksPerSet;
+        cacheTable.innerHTML = ""; // Clear existing content
+        const blocksPerSet = 4;
+        const sets = cacheLines / blocksPerSet;
 
-      // Header
-      ["Set", "Block", "MM Block"].forEach((text) => {
-          const cell = document.createElement("div");
-          cell.className = "cell header";
-          cell.textContent = text;
-          cacheTable.appendChild(cell);
-      });
+        // Header
+        ["Set", "Block", "MM Block"].forEach((text) => {
+            const cell = document.createElement("div");
+            cell.className = "cell header";
+            cell.textContent = text;
+            cacheTable.appendChild(cell);
+        });
 
-      for (let set = 0; set < sets; set++) {
-          for (let block = 0; block < blocksPerSet; block++) {
-              // Set Column (only once per set)
-              if (block === 0) {
-                  const setCell = document.createElement("div");
-                  setCell.className = "cell set-label";
-                  setCell.rowSpan = blocksPerSet;
-                  setCell.textContent = set.toString();
-                  setCell.style.gridRow = `span ${blocksPerSet}`;
-                  cacheTable.appendChild(setCell);
-              }
+        for (let set = 0; set < sets; set++) {
+            for (let block = 0; block < blocksPerSet; block++) {
+                // Set Column (only once per set)
+                if (block === 0) {
+                    const setCell = document.createElement("div");
+                    setCell.className = "cell set-label";
+                    setCell.rowSpan = blocksPerSet;
+                    setCell.textContent = set.toString();
+                    setCell.style.gridRow = `span ${blocksPerSet}`;
+                    cacheTable.appendChild(setCell);
+                }
 
-              // Block
-              const blockCell = document.createElement("div");
-              blockCell.className = "cell";
-              blockCell.textContent = block.toString();
-              cacheTable.appendChild(blockCell);
+                // Block
+                const blockCell = document.createElement("div");
+                blockCell.className = "cell";
+                blockCell.textContent = block.toString();
+                cacheTable.appendChild(blockCell);
 
-              // Data
-              const dataCell = document.createElement("div");
-              dataCell.className = "cell set-row";
-              dataCell.id = getBlockSetId(set, block);
-              cacheTable.appendChild(dataCell);
-          }
-      }
-  }
-  
-  onMount(() => {
-    generateCacheTable(numCacheLines);
-  });
-  const data = [
-    {data: 1, set_number:1, set_block_number: 0, main_memory_block: 1, step: 0},
-    {data: 2, set_number:1, set_block_number: 2, main_memory_block: 2, step: 1},
-    {data: 3, set_number:1, set_block_number: 1, main_memory_block: 3, step: 1},
-    {data: 4, set_number:1, set_block_number: 3, main_memory_block: 4, step: 1}
-  ]
+                // Data
+                const dataCell = document.createElement("div");
+                dataCell.className = "cell set-row";
+                dataCell.id = getBlockSetId(set, block);
+                cacheTable.appendChild(dataCell);
+            }
+        }
+    }
+    
+    onMount(() => {
+        generateCacheTable(numCacheLines);
+    });
+    const data = [
+        {data: 1, set_number:1, set_block_number: 0, main_memory_block: 1, step: 0},
+        {data: 2, set_number:1, set_block_number: 2, main_memory_block: 2, step: 1},
+        {data: 3, set_number:1, set_block_number: 1, main_memory_block: 3, step: 1},
+        {data: 4, set_number:1, set_block_number: 3, main_memory_block: 4, step: 1}
+    ]
+    const sramdata = [
+        { data: '3', address: 0 },
+        { data: '5', address: 1 },
+        { data: '7', address: 2 },
+        { data: '2', address: 3 }
+    ]
+
+    let wordsPerBlockInput = wordsPerBlock;
+    let numCacheLinesInput = numCacheLines;
+    let catNs = 5;
+    let matNs = 10;
+
+    // For test cases
+    let customPattern = "";
+    let testCaseSelected: string | null = null;
 </script>
 
 <div class="w-full h-full bg-base-300">
@@ -101,12 +116,7 @@
         
         <div class="flex flex-row justify-center gap-2">
             <TableMemory tableLength={4} setSize={4} items={data}></TableMemory>
-            <SRAMTable addressBits={4} blockSize={4} items={[
-                { address: 3, data: '0xA2' },
-                { address: 5, data: '0x3F' },
-                { address: 7, data: '0xBC' },
-                { address: 2, data: '0x99' }
-            ]} />
+            <SRAMTable addressBits={4} blockSize={4} items={sramdata} />
         </div>
          <div class="divider"></div>
         <div class="flex flex-row gap-2 justify-center ">

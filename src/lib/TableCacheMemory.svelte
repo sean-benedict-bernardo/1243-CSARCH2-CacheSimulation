@@ -22,7 +22,14 @@
         set_number: setIdx,
         set_block_number: blockIdx,
         key,
-        item: itemMap.get(key)
+        item: itemMap.get(key) ?? {
+          set_number: setIdx,
+          set_block_number: blockIdx,
+          main_memory_block: '-',
+          data: 0,
+          step: '-'
+        }
+
       };
     });
     return {

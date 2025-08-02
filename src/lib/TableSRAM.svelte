@@ -30,8 +30,8 @@
     address: number;
     block: number;
     data?: string | number;
-    step?: number;
-    blockStep?: number;
+    step?: string | number;
+    blockStep?: string | number;
     highlightClass: string;
     showBlockCell: boolean;
     rowspan: number;
@@ -46,9 +46,9 @@
       const row: Row = {
         address,
         block,
-        data: itemMap.get(address),
-        step: stepMap.get(address),
-        blockStep: blockStepMap.get(block),
+        data: itemMap.get(address) ?? '0',
+        step: stepMap.get(address) ?? '-',
+        blockStep: blockStepMap.get(block) ?? '-',
         highlightClass: highlightMap.get(address) ?? '',
         showBlockCell: i === 0,
         rowspan
