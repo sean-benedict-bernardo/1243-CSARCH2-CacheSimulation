@@ -1,24 +1,27 @@
 <script lang="ts">
   export let addressBits: number;
   export let blockSize: number;
-  export let items: { block: number }[] = [];
+  export let items: { block: number, step: number }[] = [];
 
   $: tableLength = 2 ** addressBits;
 
   // 🔁 Reactive stepMap based on item insertions
   $: stepMap = (() => {
     const map = new Map<number, number>();
-    items.forEach(({ block }, index) => {
+    items.forEach(({ block, step }, index) => {
       if (!map.has(block)) {
         map.set(block, index + 1); // step = index + 1
+      }
+      if (!map.has(step)){
+        map.set(block, step)
       }
     });
     return map;
   })();
 
   // 🔁 Reactive highlight mapping (last 3 blocks)
-  $: highlightClasses = ['bg-yellow-900', 'bg-yellow-700', 'bg-yellow-600'];
-  $: last3 = items.slice(-3).map(i => i.block);
+  $: highlightClasses = ['bg-yellow-600/100', 'bg-yellow-600/70', 'bg-yellow-600/40', 'bg-yellow-600/10'];
+  $: last3 = items.slice(-4).map(i => i.block);
   $: highlightMap = (() => {
     const map = new Map<number, string>();
     last3.forEach((block, i) => {

@@ -10,8 +10,8 @@
 	const wordsPerBlock = 2;
 
 	// Reactive Inputs
-	let wordsPerBlockInput = wordsPerBlock;
-	let numCacheLinesInput = numCacheLines;
+	let wordsPerBlockInput = 8;
+	let numCacheLinesInput = 2;
 	let catNs = 5;
 	let matNs = 10;
 
@@ -47,40 +47,77 @@
 	}
 
 	function addNext() {
-	const memBlk = inserts[curr];
+        const memBlk = inserts[curr];
 
-	const newBlock = cache.insert(memBlk) as {
-		ctr: number;
-		status: string;
-		setNumber: number;
-		blockNumber: number;
-		memBlkNum: number;
-		replacedBlock: number | null;
-	};
+        const newBlock = cache.insert(memBlk) as {
+            ctr: number;
+            status: string;
+            setNumber: number;
+            blockNumber: number;
+            memBlkNum: number;
+            replacedBlock: number | null;
+        };
 
-	// REASSIGN to trigger reactivity
-	cacheMemory = [...cacheMemory, {
-		set_number: newBlock.setNumber,
-		set_block_number: newBlock.blockNumber,
-		main_memory_block: memBlk,
-		step: step_num
-	}];
+        // REASSIGN to trigger reactivity
+        cacheMemory = [...cacheMemory, {
+            set_number: newBlock.setNumber,
+            set_block_number: newBlock.blockNumber,
+            main_memory_block: memBlk,
+            step: step_num
+        }];
 
-	sramdata = [...sramdata, {
-		block: memBlk,
-		step: step_num
-	}];
+        sramdata = [...sramdata, {
+            block: memBlk,
+            step: step_num
+        }];
 
-	logEntries = [...logEntries, {
-		hit: newBlock.status === "Hit",
-		action: newBlock.status === "Hit" ? `Read Block ${memBlk}` : `Load Block ${memBlk}`,
-		time: step_num
-	}];
+        logEntries = [...logEntries, {
+            hit: newBlock.status === "Hit",
+            action: newBlock.status === "Hit" ? `Read Block ${memBlk}` : `Load Block ${memBlk}`,
+            time: step_num
+        }];
 
-	curr = (curr + 1) % inserts.length;
-	step_num += 1;
+        curr = (curr + 1) % inserts.length;
+        step_num += 1;
 
-    console.log(sramdata)
+        console.log(sramdata)
+    }
+
+    function remPrev() {
+        const memBlk = inserts[curr];
+
+        const newBlock = cache.insert(memBlk) as {
+            ctr: number;
+            status: string;
+            setNumber: number;
+            blockNumber: number;
+            memBlkNum: number;
+            replacedBlock: number | null;
+        };
+
+        // REASSIGN to trigger reactivity
+        cacheMemory = [...cacheMemory, {
+            set_number: newBlock.setNumber,
+            set_block_number: newBlock.blockNumber,
+            main_memory_block: memBlk,
+            step: step_num
+        }];
+
+        sramdata = [...sramdata, {
+            block: memBlk,
+            step: step_num
+        }];
+
+        logEntries = [...logEntries, {
+            hit: newBlock.status === "Hit",
+            action: newBlock.status === "Hit" ? `Read Block ${memBlk}` : `Load Block ${memBlk}`,
+            time: step_num
+        }];
+
+        curr = (curr - 1) % inserts.length;
+        step_num = step_num > 0 ? step_num - 1 : step_num;
+
+        console.log(sramdata)
     }
 
 </script>
@@ -113,11 +150,11 @@
                     <div class="flex flex-col">
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">words per block (m)</legend>
-                            <input type="text" class="input" placeholder="Type here" />
+                            <input type="text" class="input" placeholder="Type here" bind:value={wordsPerBlockInput} defaultValue={8}/>
                         </fieldset>
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">blocks in CM (n)</legend>
-                            <input type="text" class="input" placeholder="Type here" />
+                            <input type="text" class="input" placeholder="Type here" bind:value={numCacheLinesInput} defaultValue={2}/>
                         </fieldset>
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">CAT in ns</legend>
@@ -148,7 +185,7 @@
             <div class="border-black border flex-col justify-center text-center p-1 bg-base-100 rounded-xl">
                 Step {step_num} of 16
                 <div class="flex flex-row">
-                    <button class="btn btn-xs">Previous</button>
+                    <button class="btn btn-xs" onclick={remPrev}>Previous</button>
                 <button class="btn btn-xs" onclick={addNext} >Next</button>
                 </div>
                 <button class="btn btn-xs">Final Snapshot</button>

@@ -45,10 +45,10 @@
   });
 
   // 🔁 Reactive highlight map
-  $: highlightItems = items.slice(-4);
+  $: highlightItems = items.slice(-5);
   $: highlightMap = new Map<string, string>();
   $: {
-    const classes = ['bg-yellow-900', 'bg-yellow-700', 'bg-yellow-600', 'bg-base-100', 'bg-base-100'];
+    const classes = ['bg-yellow-600/100', 'bg-yellow-600/70', 'bg-yellow-600/40', 'bg-yellow-600/10', 'bg-base-100'];
     highlightItems.forEach((item, idx) => {
       const key = makeKey(item.set_number, item.set_block_number);
       highlightMap.set(key, classes[highlightItems.length - 1 - idx]);
@@ -59,7 +59,7 @@
 </script>
 
 
-<div class="overflow-x-auto rounded-box border border-base-content/5 bg-base-100 max-h-[400px] overflow-y-scroll ">
+<div class="overflow-x-auto rounded-box border border-base-content/5 bg-base-100 max-h-[400px] overflow-y-scroll">
   <table class="table border-collapse w-full bg-base-100">
     <thead class="sticky top-0 z-10 bg-base-200">
       <tr class="border border-black ">
