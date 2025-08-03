@@ -3,7 +3,7 @@
     set_number: number;
     set_block_number: number;
     main_memory_block: number;
-    step: number;
+    step: number | string;
     hit?: boolean;
   }[] = [];
 
