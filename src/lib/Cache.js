@@ -313,9 +313,9 @@ export class CacheMemory {
 
         // increment hit or miss counters
         if (blockIndex !== -1)
-            this.statistics.misses++;
-        else
             this.statistics.hits++;
+        else
+            this.statistics.misses++;
 
         // perform insert operation
         const insertedBlock = set.insertBlock(cacheBlock);
