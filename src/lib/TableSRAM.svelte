@@ -1,67 +1,77 @@
+
 <script lang="ts">
   export let addressBits: number;
   export let blockSize: number;
-  export let items: { block: number, step: number }[] = [];
+  export let items: { block: number, step: number, hit?: boolean, sram?: boolean }[] = [];
 
-  $: tableLength = 2 ** addressBits;
+  // Calculate total blocks in the cache
+  $: totalBlocks = 2 ** addressBits / blockSize;
 
-  // 🔁 Reactive stepMap based on item insertions
-  $: stepMap = (() => {
-    const map = new Map<number, number>();
-    items.forEach(({ block, step }, index) => {
-      if (!map.has(block)) {
-        map.set(block, index + 1); // step = index + 1
-      }
-      if (!map.has(step)){
-        map.set(block, step)
-      }
-    });
-    return map;
+  // Create a map of block -> item for easy lookup
+  $: blockItemMap = new Map(
+    items.map(item => [item.block, item])
+  );
+
+  // Generate complete SRAM structure
+  $: sramStructure = Array.from({ length: totalBlocks }, (_, blockIndex) => {
+    const item = blockItemMap.get(blockIndex);
+    
+    return {
+      block: blockIndex,
+      step: item?.step ?? '-',
+      item: item
+    };
+  });
+
+  // Get recent items for highlighting (last 5) and detect hits
+  $: recentItemsWithHits = (() => {
+    const recent = items.slice(-5);
+    const seenBlocks = new Set<number>();
+    
+    return recent.map(item => {
+      const isHit = item.hit ?? seenBlocks.has(item.block);
+      seenBlocks.add(item.block);
+      
+      return { ...item, isHit };
+    }).reverse(); // Most recent first for highlighting
   })();
 
-  // 🔁 Reactive highlight mapping (last 3 blocks)
-  $: highlightClasses = ['bg-yellow-600/100', 'bg-yellow-600/70', 'bg-yellow-600/40', 'bg-yellow-600/10'];
-  $: last3 = items.slice(-4).map(i => i.block);
+  // Color classes - red for hits (cache memory), yellow for misses (SRAM)
+  const hitColors = ['bg-red-800/100', 'bg-red-800/70', 'bg-red-800/40', 'bg-red-800/10', 'bg-red-800/5'];
+  const missColors = ['bg-yellow-600/100', 'bg-yellow-600/70', 'bg-yellow-600/40', 'bg-yellow-600/10', 'bg-yellow-600/5'];
+
+  // Create highlight mapping - handle multiple entries for same block by using the most recent occurrence
   $: highlightMap = (() => {
     const map = new Map<number, string>();
-    last3.forEach((block, i) => {
-      map.set(block, highlightClasses[highlightClasses.length - 1 - i]);
-    });
+    
+    // Process from oldest to newest (end to start of reversed array)
+    // so that newer highlights override older ones
+    for (let i = recentItemsWithHits.length - 1; i >= 0; i--) {
+      const item = recentItemsWithHits[i];
+      const colors = item.isHit ? hitColors : missColors;
+      map.set(item.block, colors[i]);
+    }
+    
     return map;
   })();
 
-  type Row = {
-    address: number;
-    block: number;
-    step?: string | number;
-    highlightClass: string;
-    showBlockCell: boolean;
-    rowspan: number;
-  };
+  // Helper function to get highlight class
+  const getHighlightClass = (block: number) => highlightMap.get(block) ?? '';
 
-  // 🔁 Reactive table rows based on items, stepMap, etc.
-  $: tableRows = (() => {
-    const rows: Row[] = [];
-    for (let block = 0; block < tableLength / blockSize; block++) {
-      const rowspan = blockSize;
-      for (let i = 0; i < blockSize; i++) {
-        const address = block * blockSize + i;
-        rows.push({
-          address,
-          block,
-          step: stepMap.get(block) ?? '-',
-          highlightClass: highlightMap.get(block) ?? '',
-          showBlockCell: i === 0,
-          rowspan
-        });
-      }
-    }
-    return rows;
-  })();
+  // Generate table rows
+  $: tableRows = Array.from({ length: totalBlocks }, (_, blockIndex) => {
+    return Array.from({ length: blockSize }, (_, offsetIndex) => ({
+      address: blockIndex * blockSize + offsetIndex,
+      block: blockIndex,
+      step: sramStructure[blockIndex].step,
+      highlightClass: getHighlightClass(blockIndex),
+      isFirstInBlock: offsetIndex === 0,
+      blockSize: blockSize
+    }));
+  }).flat();
 </script>
 
-
-<div class="overflow-x-auto rounded-box border border-base-content/5 bg-base-100 max-h-[400px] overflow-y-scroll ">
+<div class="overflow-x-auto rounded-box border border-base-content/5 bg-base-100 max-h-[400px] overflow-y-scroll">
   <table class="table border-collapse w-full bg-base-100">
     <thead class="sticky top-0 z-10 bg-base-200">
       <tr class="border border-black">
@@ -72,11 +82,12 @@
     <tbody>
       {#each tableRows as row}
         <tr class={`border border-black ${row.highlightClass}`}>
-          {#if row.showBlockCell}
-            <td class="text-center border border-black" rowspan={row.rowspan}>{row.block}</td>
+          {#if row.isFirstInBlock}
+            <td class="text-center border border-black" rowspan={row.blockSize}>
+              {row.block}
+            </td>
           {/if}
-
-          <td class="text-center border border-black">{row.step ?? ''}</td>
+          <td class="text-center border border-black">{row.step}</td>
         </tr>
       {/each}
     </tbody>

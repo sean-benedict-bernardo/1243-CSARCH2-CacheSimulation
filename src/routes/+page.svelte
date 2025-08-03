@@ -61,9 +61,10 @@
 		set_block_number: number;
 		main_memory_block: number;
 		step: number;
+		hit: boolean;
 	}[] = [];
 
-	let sramdata: { block: number; step: number }[] = [];
+	let sramdata: { block: number; step: number; hit: boolean; }[] = [];
 
 	let logEntries: { hit: boolean; action: string; time: number }[] = [];
 
@@ -97,7 +98,6 @@
 			memBlkNum: number;
 			replacedBlock: number | null;
 		};
-
 		// REASSIGN to trigger reactivity
 		cacheMemory = [
 			...cacheMemory,
@@ -105,7 +105,8 @@
 				set_number: newBlock.setNumber,
 				set_block_number: newBlock.blockNumber,
 				main_memory_block: memBlk,
-				step: step_num
+				step: step_num,
+				hit: newBlock.status === "Hit"
 			}
 		];
 
@@ -113,7 +114,8 @@
 			...sramdata,
 			{
 				block: memBlk,
-				step: step_num
+				step: step_num,
+				hit: newBlock.status === "Hit"
 			}
 		];
 
@@ -128,7 +130,11 @@
 			}
 		];
 
-		const stats = cache.getStats();
+		const stats = cache.getStats() as {
+        hits: number,
+        misses: number,
+    };
+
 		numHits = stats.hits;
 		numMisses = stats.misses;
 
@@ -164,12 +170,14 @@
             set_number: newBlock.setNumber,
             set_block_number: newBlock.blockNumber,
             main_memory_block: memBlk,
-            step: step_num
+            step: step_num,
+						hit: newBlock.status === "Hit"
         }];
 
         sramdata = [...sramdata, {
             block: memBlk,
-            step: step_num
+            step: step_num,
+						hit: newBlock.status === "Hit"
         }];
 
         logEntries = [...logEntries, {
@@ -212,6 +220,11 @@
 		sramdata = [];
 		logEntries = [];
 		inserts = [];
+
+		cacheMemory = [...cacheMemory];
+		sramdata = [...sramdata];
+		logEntries = [...logEntries];
+		inserts = [...inserts];
 
 		curr = 0;
 		step_num = 1;
