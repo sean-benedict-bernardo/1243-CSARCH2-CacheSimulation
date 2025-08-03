@@ -1,5 +1,5 @@
 <script lang="ts">
-  export let logs: { hit: boolean; action: string; time: number | string }[] = [];
+  export let logs: { hit: boolean; action: string}[] = [];
 </script>
 
 <div class="overflow-x-auto rounded-box border border-base-content/5 bg-base-100 max-h-[400px] overflow-y-scroll">
@@ -8,16 +8,14 @@
       <tr>
         <th>#</th>
         <th>Action</th>
-        <th>Time</th>
         <th>Result</th>
       </tr>
     </thead>
     <tbody>
-      {#each logs as { hit, action, time }, i}
+      {#each logs as { hit, action}, i}
         <tr>
           <td class="text-center">{i + 1}</td>
           <td>{action}</td>
-          <td class="text-center">{time}</td>
           <td class="text-center">
             {#if hit}
               <span class="badge badge-success">HIT</span>

@@ -4,6 +4,7 @@
 	import SRAMTable from '$lib/TableSRAM.svelte';
 	import ActionLogs from '$lib/TableActionLogs.svelte';
 	import { onMount } from 'svelte';
+	import { exportLogs, createLogs } from '$lib/ExportLogs.js'
 
 	// Audio Context and Sound Effects
 	let audioContext: AudioContext | null = null;
@@ -52,7 +53,7 @@
 
 	let sramdata: { block: number; step: number; hit: boolean; }[] = [];
 
-	let logEntries: { hit: boolean; action: string; time: number | string }[] = [];
+	let logEntries: { hit: boolean; action: string; }[] = [];
 
 	let cache = new CacheMemory(wordsPerBlockInput, numCacheLinesInput, catNs, matNs);
 
@@ -186,10 +187,24 @@
 		return `data_${padZero(set)}_${block}`;
 	}
 
+	let whyShouldIInvestInQuantumComputing = [] as {
+			ctr: number;
+			status: string;
+			setNumber: number;
+			blockNumber: number;
+			memBlkNum: number;
+			replacedBlock: number | null;
+		}[]
+
+	function downloadLogs(){
+		exportLogs(whyShouldIInvestInQuantumComputing)
+	}
+
 	function addNext() {
 		if (curr >= inserts.length) {
 			// Optional: Show a message or disable the button
 			console.log("Simulation complete. No more steps.");
+			playCompletionSound()
 			return;
 		}
 
@@ -203,6 +218,11 @@
 			memBlkNum: number;
 			replacedBlock: number | null;
 		};
+
+		whyShouldIInvestInQuantumComputing = [
+			...whyShouldIInvestInQuantumComputing,
+			newBlock	
+		]
 		// REASSIGN to trigger reactivity
 		cacheMemory = [
 			...cacheMemory,
@@ -230,8 +250,7 @@
 				hit: newBlock.status === 'Hit',
 				action: newBlock.status === 'Hit'
 					? `Read Block ${memBlk}`
-					: `Load Block ${memBlk}`,
-				time: newBlock.status === "Hit" ? `${catNs} ns` : `${matNs} ns`
+					: `Load Block ${memBlk}`
 			}
 		];
 
@@ -248,6 +267,9 @@
 
 		TAT = cache.calculateTotalAccessTime();
 		AAT = cache.calculateAverageAccessTime();
+
+		playCacheMissNoise()
+		newBlock.status === "Hit" ? playCacheHitSound () : playCacheMissSound()
 
 		console.log(sramdata);
 	}
@@ -271,8 +293,7 @@
 		
 		// Use CAT for hits, MAT for misses, plus base play delay
 		const accessTime = wouldBeHit ? catNs : matNs;
-		playCacheMissNoise()
-		wouldBeHit ? playCacheHitSound () : playCacheMissSound()
+		
 		// Convert nanoseconds to milliseconds for setTimeout (1ms = 1,000,000ns)
 		// Scale down for reasonable visualization speed
 		return (accessTime + playNs) / 1000; // Divide by 1000 to make it reasonable for UI
@@ -318,46 +339,7 @@
 		}
 	}
 
-	function remPrev() {
-		stopPlay(); // Stop play mode when manually stepping
-		
-		const memBlk = inserts[curr];
-
-		const newBlock = cache.insert(memBlk) as {
-				ctr: number;
-				status: string;
-				setNumber: number;
-				blockNumber: number;
-				memBlkNum: number;
-				replacedBlock: number | null;
-		};
-
-		// REASSIGN to trigger reactivity
-		cacheMemory = [...cacheMemory, {
-				set_number: newBlock.setNumber,
-				set_block_number: newBlock.blockNumber,
-				main_memory_block: memBlk,
-				step: step_num,
-				hit: newBlock.status === "Hit"
-		}];
-
-		sramdata = [...sramdata, {
-				block: memBlk,
-				step: step_num,
-				hit: newBlock.status === "Hit"
-		}];
-
-		logEntries = [...logEntries, {
-				hit: newBlock.status === "Hit",
-				action: newBlock.status === "Hit" ? `Read Block ${memBlk}` : `Load Block ${memBlk}`,
-				time: newBlock.status === "Hit" ? `${catNs}` : `${matNs}`
-		}];
-
-		curr = (curr - 1) % inserts.length;
-		step_num = step_num > 0 ? step_num - 1 : step_num;
-
-		console.log(sramdata)
-	}
+	
 
 	function handleNext() {
 		stopPlay(); // Stop play mode when manually stepping
@@ -394,11 +376,13 @@
 		sramdata = [];
 		logEntries = [];
 		inserts = [];
-
+		whyShouldIInvestInQuantumComputing = [],
+		
 		cacheMemory = [...cacheMemory];
 		sramdata = [...sramdata];
 		logEntries = [...logEntries];
 		inserts = [...inserts];
+		whyShouldIInvestInQuantumComputing = [...whyShouldIInvestInQuantumComputing]
 
 		curr = 0;
 		step_num = 1;
@@ -593,6 +577,12 @@
 						disabled={isPlaying || isFinalStep}
 					>
 						Next
+					</button>
+					<button 
+						class="btn btn-xs" 
+						onclick={downloadLogs}
+					>
+						Download
 					</button>
 				</div>
 				<button 

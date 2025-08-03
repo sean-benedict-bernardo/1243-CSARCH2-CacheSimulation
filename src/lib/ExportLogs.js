@@ -5,7 +5,7 @@
  * @returns string of the log entry
  */
 
-function createLog(cacheInsertEntry) {
+export function createLog(cacheInsertEntry) {
     const { ctr, status, setNumber, blockNumber, memBlkNum, replacedBlock } = cacheInsertEntry;
 
     let str = `[${ctr}] Cache ${status}:`
@@ -28,7 +28,7 @@ function createLog(cacheInsertEntry) {
  * 
  * @param {Array<Object>} cacheInsertLogs array of cache insert logs
  */
-function createLogs(cacheInsertLogs) {
+export function createLogs(cacheInsertLogs) {
     const sortedLogs = cacheInsertLogs
         .slice()
         .sort((a, b) => a.ctr - b.ctr)
@@ -42,7 +42,7 @@ function createLogs(cacheInsertLogs) {
  * 
  * @param {Array<Object>} cacheInsertLogs
  */
-function exportLogs(cacheInsertLogs) {
+export function exportLogs(cacheInsertLogs) {
     const logs = createLogs(cacheInsertLogs);
     const blob = new Blob([logs], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
