@@ -19,6 +19,7 @@
 	let numCacheLinesInput: number = numCacheLines;
 	let catNs: number = 5;
 	let matNs: number = 10;
+	let playNs: number = 100;
 
 	let numHits: number = 0;
 	let numMisses: number = 0;
@@ -66,7 +67,7 @@
 
 	let sramdata: { block: number; step: number; hit: boolean; }[] = [];
 
-	let logEntries: { hit: boolean; action: string; time: number }[] = [];
+	let logEntries: { hit: boolean; action: string; time: number | string }[] = [];
 
 	let cache = new CacheMemory(wordsPerBlockInput, numCacheLinesInput, catNs, matNs);
 
@@ -124,9 +125,11 @@
 			{
 				hit: newBlock.status === 'Hit',
 				action: newBlock.status === 'Hit'
-					? `Read Block ${memBlk}`
-					: `Load Block ${memBlk}`,
-				time: step_num
+					? `Read Main Memory Block ${memBlk}`
+					: `Read Cache Memory Block ${memBlk}`,
+				time: newBlock.status === 'Hit' 
+					? `${catNs} ns`
+					: `${matNs} ns`
 			}
 		];
 
@@ -152,45 +155,102 @@
 			addNext();
 		}
 	}
+	let isPlaying = false
+	let playTimeoutId: number | null = null;
 
-    function remPrev() {
-        const memBlk = inserts[curr];
+	function calculatePlayDelay(): number {
+		// Calculate delay based on whether the next operation will be a hit or miss
+		if (curr >= inserts.length) return 0;
+		
+		const memBlk = inserts[curr];
+		// Preview if this will be a hit or miss without actually inserting
+		const wouldBeHit = cache.wouldHit(memBlk);
+		
+		// Use CAT for hits, MAT for misses, plus base play delay
+		const accessTime = wouldBeHit ? catNs : matNs;
+		
+		// Convert nanoseconds to milliseconds for setTimeout (1ms = 1,000,000ns)
+		// Scale down for reasonable visualization speed
+		return (accessTime + playNs) / 1000; // Divide by 1000 to make it reasonable for UI
+	}
 
-        const newBlock = cache.insert(memBlk) as {
-            ctr: number;
-            status: string;
-            setNumber: number;
-            blockNumber: number;
-            memBlkNum: number;
-            replacedBlock: number | null;
-        };
+	async function play() {
+		if (isPlaying) {
+			stopPlay();
+			return;
+		}
 
-        // REASSIGN to trigger reactivity
-        cacheMemory = [...cacheMemory, {
-            set_number: newBlock.setNumber,
-            set_block_number: newBlock.blockNumber,
-            main_memory_block: memBlk,
-            step: step_num,
-						hit: newBlock.status === "Hit"
-        }];
+		if (isFinalStep) {
+			console.log("Simulation already complete.");
+			return;
+		}
 
-        sramdata = [...sramdata, {
-            block: memBlk,
-            step: step_num,
-						hit: newBlock.status === "Hit"
-        }];
+		isPlaying = true;
+		scheduleNextStep();
+	}
 
-        logEntries = [...logEntries, {
-            hit: newBlock.status === "Hit",
-            action: newBlock.status === "Hit" ? `Read Block ${memBlk}` : `Load Block ${memBlk}`,
-            time: step_num
-        }];
+	function scheduleNextStep() {
+		if (!isPlaying || isFinalStep) {
+			stopPlay();
+			return;
+		}
 
-        curr = (curr - 1) % inserts.length;
-        step_num = step_num > 0 ? step_num - 1 : step_num;
+		const delay = calculatePlayDelay();
+		
+		playTimeoutId = window.setTimeout(() => {
+			if (isPlaying && !isFinalStep) {
+				addNext();
+				scheduleNextStep(); // Schedule the next step
+			}
+		}, delay);
+	}
 
-        console.log(sramdata)
-    }
+	function stopPlay() {
+		isPlaying = false;
+		if (playTimeoutId !== null) {
+			clearTimeout(playTimeoutId);
+			playTimeoutId = null;
+		}
+	}
+
+	function remPrev() {
+			const memBlk = inserts[curr];
+
+			const newBlock = cache.insert(memBlk) as {
+					ctr: number;
+					status: string;
+					setNumber: number;
+					blockNumber: number;
+					memBlkNum: number;
+					replacedBlock: number | null;
+			};
+
+			// REASSIGN to trigger reactivity
+			cacheMemory = [...cacheMemory, {
+					set_number: newBlock.setNumber,
+					set_block_number: newBlock.blockNumber,
+					main_memory_block: memBlk,
+					step: step_num,
+					hit: newBlock.status === "Hit"
+			}];
+
+			sramdata = [...sramdata, {
+					block: memBlk,
+					step: step_num,
+					hit: newBlock.status === "Hit"
+			}];
+
+			logEntries = [...logEntries, {
+					hit: newBlock.status === "Hit",
+					action: newBlock.status === "Hit" ? `Read Block ${memBlk}` : `Load Block ${memBlk}`,
+					time: step_num
+			}];
+
+			curr = (curr - 1) % inserts.length;
+			step_num = step_num > 0 ? step_num - 1 : step_num;
+
+			console.log(sramdata)
+	}
 
 	// TODO: Reset Orange Shades
 	function resetSimulationState() {
@@ -266,14 +326,14 @@
 <div class="h-full w-full bg-base-300">
 	<h1 class="text-center text-2xl font-bold">Cache Simulator</h1>
 	<div class=" w-full">
-		<div class="flex flex-row justify-center gap-2">
+		<div class="flex flex-row justify-center gap-4">
 			<ActionLogs logs={logEntries} />
 			<TableMemory tableLength={numCacheLines / 4} setSize={4} items={cacheMemory}></TableMemory>
 			<SRAMTable addressBits={10} blockSize={1} items={sramdata} />
 		</div>
-		<div class="divider"></div>
-		<div class="flex flex-row justify-center gap-2">
-			<div class="rounded-2xl border border-black bg-base-100 px-4 py-3 shadow-md space-y-2 max-w-md">
+		<div class="divider m-1"></div>
+		<div class="flex flex-row justify-center gap-4">
+			<div class="rounded-2xl border border-black bg-base-100 p-4 shadow-md space-y-2 max-w-md">
 				<h1 class="text-xl font-semibold text-center">Cache Simulation Project</h1>
 				<p class="text-center text-sm text-gray-600">by CSARCH2 S12 · Group 1</p>
 			  
@@ -285,7 +345,7 @@
 				  </ol>
 				</div>
 			</div>
-			<div class="flex flex-row gap-8 rounded-xl border border-black bg-base-100 p-1">
+			<div class="flex flex-row gap-8 rounded-xl border border-black bg-base-100 p-4">
 				<div>
 					Input Params
 					<div class="flex flex-col">
@@ -374,13 +434,14 @@
 				</div>
 			</div>
 			<div
-				class="flex-col justify-center rounded-xl border border-black bg-base-100 p-1 text-center"
+				class="flex-col justify-center rounded-xl border border-black bg-base-100 p-4 text-center"
 			>
 				Step {step_num}
 				{#if isFinalStep}
 					<p class="text-xs text-red-500">Final step reached</p>
 				{/if}
-				<div class="flex flex-row">
+				<div class="flex flex-row justify-center">
+					<button class="btn btn-xs" onclick={play}>Play</button>
 					<button class="btn btn-xs" onclick={addNext}>Next</button>
 				</div>
 				<button class="btn btn-xs" onclick={runToFinalStep}>Final Snapshot</button>
@@ -393,10 +454,10 @@
 					<p>Misses: {numMisses}</p>
 					<p>Hit Rate: {isNaN(numHits / (numHits + numMisses)) ? '0.00' : ((numHits / (numHits + numMisses)) * 100).toFixed(2)}%</p>
 					<p>Miss Rate: {isNaN(numMisses / (numHits + numMisses)) ? '0.00' : ((numMisses / (numHits + numMisses)) * 100).toFixed(2)}%</p>
-                    <div class="divider"></div>
-                    <p>Access Times</p>
-                    <p>Average: {AAT.toFixed(2)}ns</p>
-                    <p>Total: {TAT.toFixed(2)}ns</p>
+					<div class="divider"></div>
+					<p>Access Times</p>
+					<p>Average: {AAT.toFixed(2)}ns</p>
+					<p>Total: {TAT.toFixed(2)}ns</p>
 					<p><br></p>
 				</div>
 			</div>

@@ -1,5 +1,5 @@
 <script lang="ts">
-  export let logs: { hit: boolean; action: string; time: number }[] = [];
+  export let logs: { hit: boolean; action: string; time: number | string }[] = [];
 </script>
 
 <div class="overflow-x-auto rounded-box border border-base-content/5 bg-base-100 max-h-[400px] overflow-y-scroll">

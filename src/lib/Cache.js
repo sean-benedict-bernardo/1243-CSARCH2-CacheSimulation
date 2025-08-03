@@ -334,6 +334,17 @@ export class CacheMemory {
     }
 
 
+    wouldHit(blockNumber) {
+        const setNumber = this.#getSetNumber(blockNumber);
+        const set = this.cache[setNumber];
+
+        // Check if the block is already in the set
+        const blockIndex = set.isInSet(blockNumber);
+
+        // increment hit or miss counters
+        return (blockIndex !== -1)
+    }   
+
     /**
      * Returns the cache statistics.
      * @returns {Object} - Statistics object containing hits and misses
