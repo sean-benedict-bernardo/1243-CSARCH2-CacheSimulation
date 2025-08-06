@@ -13,6 +13,7 @@
 	let pendingTestCase: string = '';
 
 	let selectedTestCase: string = '';
+	let customTestCase: string = '';
 	let randomLengthTestCase: number = 0;
 
 	const SRAM_BLOCKS = 16;
@@ -413,6 +414,13 @@
 			while (i--) {
 				inserts.push(Math.floor(Math.random() * 1023));
 			}
+		} else if (selectedTestCase === 'custom') {
+			if (customTestCase.trim().length > 0) {
+				inserts = customTestCase
+					.split(',')
+					.map(s => parseInt(s.trim()))
+					.filter(n => !isNaN(n));
+			}
 		}
 
 		console.log("Reset Success");
@@ -554,7 +562,27 @@
 							  disabled={pendingTestCase !== 'random' || isPlaying}
 							/>
 
-							{#if selectedTestCase === 'random' && inserts.length > 0}
+							<label class="inline-flex items-center gap-2">
+								<input
+								  type="radio"
+								  class="radio size-4 radio-primary"
+								  name="testcase"
+								  bind:group={pendingTestCase}
+								  value="custom"
+								  disabled={isPlaying}
+								/>
+								<span>Custom (e.g. 3, 5, 8, 69, 42)</span>
+							  </label>
+							
+							  <input
+								type="string"
+								class="input w-full"
+								placeholder="Type here"
+								bind:value={customTestCase}
+								disabled={pendingTestCase !== 'custom' || isPlaying}
+							  />
+
+							{#if inserts.length > 0}
 								<div class="mt-4 border rounded p-2 bg-base-200 overflow-x-auto max-w-xs">
 									<p class="font-semibold text-xs mb-1">Generated Random Blocks:</p>
 									<div class="text-xs whitespace-nowrap">
