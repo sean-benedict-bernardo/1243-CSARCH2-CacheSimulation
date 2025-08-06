@@ -13,7 +13,7 @@
 	let pendingTestCase: string = '';
 
 	let selectedTestCase: string = '';
-	let customTestCase: string = '';
+	let randomLengthTestCase: number = 0;
 
 	const SRAM_BLOCKS = 16;
 	let wordsPerBlock = 2;
@@ -404,12 +404,14 @@
 			for (let i = 1; i < 2 * n; ++i) inserts.push(i);
 			for (let i = 0; i < n; ++i) inserts.push(i);
 			for (let i = 1; i < 2 * n; ++i) inserts.push(i);
-		} else if (selectedTestCase === 'custom') {
-			if (customTestCase.trim().length > 0) {
-				inserts = customTestCase
-					.split(',')
-					.map(s => parseInt(s.trim()))
-					.filter(n => !isNaN(n));
+		} else if (selectedTestCase === 'random') {
+			if (randomLengthTestCase <= 0 || isNaN(randomLengthTestCase)) {
+				alert("Please enter a valid positive number for random length.");
+				return;
+			}
+			let i = randomLengthTestCase;
+			while (i--) {
+				inserts.push(Math.floor(Math.random() * 1023));
 			}
 		}
 
@@ -445,6 +447,17 @@
 					<li>4-way Block Set Associative LRU</li>
 					<li>Read Policy: Non-Load-Through</li>
 				  </ol>
+				</div>
+
+				<div>
+					<h2 class="font-medium text-base underline mb-1">Group Members</h2>
+					<ul class="list-disc list-inside text-sm space-y-1 pl-2">
+						<li>ANCHETA, Liam Michael</li>
+						<li>BERNARDO, Sean Benedict</li>
+						<li>CAMPO, Roan Cedric</li>
+						<li>CESAR, Jusper Angelo</li>
+						<li>CHAN, Enzo Rafael</li>
+					</ul>
 				</div>
 			</div>
 			<div class="flex flex-row gap-8 rounded-xl border border-black bg-base-100 p-4">
@@ -527,20 +540,29 @@
 								class="radio size-4 radio-primary"
 								name="testcase"
 								bind:group={pendingTestCase}
-								value="custom"
+								value="random"
 								disabled={isPlaying}
 							  />
-							  <span>Custom</span>
+							  <span>Random (w/ given length)</span>
 							</label>
 						  
 							<input
-							  type="text"
+							  type="number"
 							  class="input w-full"
 							  placeholder="Type here"
-							  bind:value={customTestCase}
-							  disabled={pendingTestCase !== 'custom' || isPlaying}
+							  bind:value={randomLengthTestCase}
+							  disabled={pendingTestCase !== 'random' || isPlaying}
 							/>
-							
+
+							{#if selectedTestCase === 'random' && inserts.length > 0}
+								<div class="mt-4 border rounded p-2 bg-base-200 overflow-x-auto max-w-xs">
+									<p class="font-semibold text-xs mb-1">Generated Random Blocks:</p>
+									<div class="text-xs whitespace-nowrap">
+										{inserts.join(', ')}
+									</div>
+								</div>
+							{/if}
+														
 							<button 
 							  onclick={resetSimulationState} 
 							  class="btn btn-primary mt-2"
