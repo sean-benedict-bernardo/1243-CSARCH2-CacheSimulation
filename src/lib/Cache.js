@@ -1,4 +1,4 @@
-const SET_SIZE = 4, IS_DEBUG = true;
+const SET_SIZE = 4, IS_DEBUG = false;
 
 function debug(message) {
     if (IS_DEBUG)
