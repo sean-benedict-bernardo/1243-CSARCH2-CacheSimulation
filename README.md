@@ -1,5 +1,7 @@
 # 1243 CSARCH2 Cache Memory Simulator
 
+![Static Badge](https://img.shields.io/badge/AY2425--T3-CSARCH2-red) ![SvelteKit](https://img.shields.io/badge/SvelteKit-%23f1413d.svg?logo=svelte&logoColor=white)
+
 By CSARCH2 - S12 Grp 1 consisting of 
 - ANCHETA, Liam Michael
 - BERNARDO, Sean Benedict
